@@ -23,6 +23,17 @@
   }
 }
 
+.rating {
+  color: #1E1E1E;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 130%; /* 15.6px */
+  letter-spacing: -0.12px;
+  opacity: 0.8;
+  border-top: solid 1px #ddd;
+  padding-top: 5px;
+}
+
 .time {
   color: #000000;
   font-size: 12px;

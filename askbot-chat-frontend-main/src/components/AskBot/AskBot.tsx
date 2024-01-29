@@ -82,13 +82,13 @@ function AskBot({ country, className }: Props) {
         if (!res || !subscribed) return;
         console.log(res)
         const {
-          data: { answer, links },
+          data: { answer, markdown, links },
           status,
         } = res?.data ?? { data: {} };
         console.log(answer, status);
         // setMessages([...messages, { text: replaceLinks(answer, links), isMine: false, time: getCurrentTime() }])
         // setMessages([...messages, { text: removeNumbersAndParentheses(answer), isMine: false, time: getCurrentTime() }])
-        setMessages([...messages, { text: answer, isMine: false, time: getCurrentTime() }])
+        setMessages([...messages, { text: answer, question, markdown, isMine: false, time: getCurrentTime() }])
         setQuestion("")
         if (status) {
           setStatus(STATUS.SUCCESS);
@@ -124,12 +124,12 @@ function AskBot({ country, className }: Props) {
           <>
             {messages.map(item => {
               return (
-                <Message key={item.time + item.text} isMine={item.isMine} text={item.text} time={item.time} />
+                <Message key={item.time + item.text} isMine={item.isMine} text={item.text} question={item.question} markdown={item.markdown} time={item.time} />
               )
             })}
             {(status == STATUS.SENDING || status == STATUS.ERROR) && <Message isMine={false} text={""} time={""} botStatus={status} /> }
           </>
-          }
+        }
       </div>
       <form action="" className={s.wrapper} onSubmit={handleSend}
             autoComplete="off">
