@@ -45,9 +45,7 @@ function AskBot({ country, className }: Props) {
 
   const allowSending = question.length > 1 || status === STATUS.SENDING;
 
-  const handleChangeQuestion: React.ChangeEventHandler<HTMLInputElement> = (
-    e
-  ) => {
+  const handleChangeQuestion: React.ChangeEventHandler<HTMLInputElement> = ( e ) => {
     if (status === STATUS.SENDING) return;
     setQuestion(e.target.value)
   };
@@ -64,10 +62,13 @@ function AskBot({ country, className }: Props) {
   useEffect(() => {
     let subscribed = true;
     const sendFeedback = async () => {
+      let savedQuestion = question;
+      setQuestion("");
+
       try {
         console.log("Send");
         const res = await axios.post(NEW_API_ENDPOINT, {
-          question,
+          question: savedQuestion,
           api: true,
           engine: 'answer',
           client: CLIENT_ID,
@@ -79,20 +80,28 @@ function AskBot({ country, className }: Props) {
           }
         });
         console.log("success??", res, subscribed);
+
         if (!res || !subscribed) return;
         console.log(res)
+
         const {
           data: { answer, markdown, links },
           status,
         } = res?.data ?? { data: {} };
         console.log(answer, status);
-        // setMessages([...messages, { text: replaceLinks(answer, links), isMine: false, time: getCurrentTime() }])
-        // setMessages([...messages, { text: removeNumbersAndParentheses(answer), isMine: false, time: getCurrentTime() }])
-        setMessages([...messages, { text: answer, question, markdown, isMine: false, time: getCurrentTime() }])
-        setQuestion("")
+
+        setMessages([ ...messages, {
+          text: answer,
+          question: savedQuestion,
+          markdown: markdown,
+          isMine: false,
+          time: getCurrentTime()
+        }])
+
         if (status) {
           setStatus(STATUS.SUCCESS);
         }
+
       } catch (error: any) {
         console.log(error)
         setStatus(STATUS.ERROR);
@@ -106,7 +115,7 @@ function AskBot({ country, className }: Props) {
     return () => {
       subscribed = false;
     };
-  }, [status, country, question]);
+  }, [status, country]);
 
   useEffect(() => {
     if (rootRef.current && messages.length < 2) {
@@ -155,11 +164,11 @@ function AskBot({ country, className }: Props) {
                  alt={`Логотип askrobot.io`}
                  className={"opacity-50"}
           />
-          <p className={s.disclaimer}>Бот работает на основе сервиса askrobot.io. История чата не сохраняется</p>
+          <p className={s.disclaimer}>Бот работает на основе сервиса askrobot.io. История чата не сохраняется.</p>
       </div>
       {isInitiallyOpen &&
         <div className={s.openCloseRoot} onClick={() => setIsOpen(!isOpen)}>
-          <svg className={cn(s.chevron, isOpen ? "-rotate-90" : "rotate-90")} version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
+          <svg className={cn(s.chevron, isOpen ? "chevron-toggle-hide" : "chevron-toggle-show")} version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
                viewBox="0 0 185.343 185.343">
             <g>
               <g>

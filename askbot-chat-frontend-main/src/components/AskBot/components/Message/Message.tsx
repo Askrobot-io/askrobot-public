@@ -21,19 +21,15 @@ type Props = {
   botStatus?: STATUS;
 }
 
-  const watchers = [
-    {
-      watchFor: "link",
-      render: (text: string) => <a target={"_blank"} rel="nofollow noindex noopener noreferrer" href={text}>{text}</a>,
-    }, {
-      watchFor: "email",
-      render: (url: string) => (
-        <a href={`mailto:${url}`} target="_blank" rel="nofollow noindex noopener noreferrer">
-          {url.replace("@", "[at]")}
-        </a>
-      ),
-    },
-  ];
+// Custom link component that opens links in a new tab
+const LinkRenderer = ({ node, children, ...props }) => {
+  // Add any additional logic here, such as checking for external links
+  return (
+    <a href={props.href} target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  );
+};
 
 const raitingTextHash = {
   1: "Poor: a low level of quality",
@@ -100,7 +96,7 @@ export const Message: FC<Props> = ({ isMine, text, question, markdown, time, bot
                     alt={"Иконка ошибки"}
             />
             <p className={s.text}>
-              Упс! Что-то пошло не так, попробуйте задать вопрос позже
+              Упс! Что-то пошло не так, попробуйте задать вопрос позже.
             </p>
           </div>
         </div>
@@ -110,7 +106,11 @@ export const Message: FC<Props> = ({ isMine, text, question, markdown, time, bot
           <div className={s.text}>
             {
               markdown != null && markdown.trim() != ""
-              ? <ReactMarkdown parserOptions={{ commonmark: true }} children={markdown.replace(/\n/gi, '\n\n')}></ReactMarkdown>
+              ? <ReactMarkdown
+                  components={{ a: LinkRenderer }}
+                  parserOptions={{ commonmark: true }}
+                  children={markdown.replace(/\n/gi, '\n\n')}
+                ></ReactMarkdown>
               : text
             }
           </div>
