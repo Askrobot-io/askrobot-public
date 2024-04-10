@@ -1,0 +1,165 @@
+<div class="askrobot-card" [ngClass]="getThemeClass()">
+    <ng-container *ngIf="!(this.isLoading || this.showSearchConfirmation)">
+        <div
+            *ngIf="statusText"
+            class="status"
+            [ngStyle]="{'backgroundColor': statusBgColor, 'color': statusColor }"
+        >
+            {{statusText}}
+        </div>
+        <div class="card-wrapper">
+            <askrobot-logo-icon [color]="getLogoColor()"></askrobot-logo-icon>
+
+            <div>
+                <div class="title" [ngClass]="getThemeClass()">
+                    {{title}}
+                </div>
+
+
+                <div *ngIf="warningText" class="warning" [ngClass]="getThemeClass()">
+                    <warning-icon [color]="getIconColor()"></warning-icon>
+
+                    <span>
+                        {{warningText}}
+                    </span>
+
+                </div>
+
+                <div
+                    class="description"
+                    [ngClass]="getThemeClass()"
+                    [class.expanded]="expanded"
+                    [innerHTML]="description | sanitiser" [style.-webkitLineClamp]="previewDescriptionLines"
+                >
+                </div>
+
+                <actions
+                    *ngIf="expanded && !showRatingBlock" [theme]="getThemeClass()"
+                    [mainButtonText]="showSearch ? 'Поискать в статьях' : ''"
+                    [mainButtonComponent]="searchIcon"
+                    (mainButtonAction)="searchConfirmationClick()"
+                    [secondaryButtonText]="showRating ? 'Оценить ответ' : ''"
+                    [secondaryButtonComponent]="ratingIcon"
+                    (secondaryButtonAction)="ratingBlockClick()"
+                >
+                </actions>
+            </div>
+        </div>
+
+        <ng-container *ngIf="showRatingBlock">
+            <ng-container *ngTemplateOutlet="ratingBlock">
+            </ng-container>
+        </ng-container>
+
+        <div *ngIf="!expanded" class="expand" [ngClass]="getThemeClass()">
+            <button *ngIf="isExpandable" class="expand-btn" (click)="toggleExpand()">
+                <arrowdown-icon [color]="getIconColor()"></arrowdown-icon>
+            </button>
+        </div>
+    </ng-container>
+
+    <ng-container *ngIf="isLoading">
+        <div class="loader-wrapper">
+            <askrobot-logo-icon [color]="getLogoColor()"></askrobot-logo-icon>
+            <div class="loader" [ngClass]="getThemeClass()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </ng-container>
+
+    <ng-container *ngIf="showSearchConfirmation">
+        <div class="card-wrapper">
+            <askrobot-logo-icon [color]="getLogoColor()"></askrobot-logo-icon>
+            <div>
+                <div class="title no-underline" [ngClass]="getThemeClass()">
+                    Вы точно хотите поискать ответ в статьях?
+                </div>
+
+                <div class="block">
+                    Информация в статьях не является стандартом Додо!
+                </div>
+
+                <actions
+                    [theme]="getThemeClass()"
+                    [mainButtonText]="'Да, искать в статьях'"
+                    [mainButtonComponent]="searchIcon"
+                    (mainButtonAction)="searchClick()"
+                    [secondaryButtonText]="'Отмена'"
+                    (secondaryButtonAction)="searchCancelClick()"
+                >
+                </actions>
+            </div>
+        </div>
+    </ng-container>
+</div>
+
+
+<ng-template #searchIcon>
+    <search-icon [color]="getSearchIconColor()"></search-icon>
+</ng-template>
+
+<ng-template #ratingIcon>
+    <rating-icon [color]="getIconColor()"></rating-icon>
+</ng-template>
+
+<ng-template #ratingBlock>
+    <div class="rating-block" [ngClass]="getThemeClass()">
+        <form *ngIf="!ratingSuccessBlock" (ngSubmit)="ratingClick()">
+            <div>
+                <div>
+                    Ваша оценка ответа
+                </div>
+                <div class="stars">
+                    <button
+                        *ngFor="let item of [1, 2, 3, 4, 5]; let i = index"
+                        (mouseover)="onStarHover(i)"
+                        (mouseleave)="onStarLeave()"
+                        (click)="onStarClick(i)"
+                    >
+                        <span [ngClass]="{'hide': i > hoverRating}">
+                            <filled-star-icon [color]="getIconColor()"></filled-star-icon>
+                        </span>
+                        <span [ngClass]="{'hide': i <= hoverRating}">
+                            <star-icon [color]="getIconColor()"></star-icon>
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <div>
+                    Комментарий к оценке
+                </div>
+                <textarea
+                    class="textarea"
+                    [ngClass]="getThemeClass()"
+                    name="comment"
+                    rows="5"
+                    cols="30"
+                    [(ngModel)]="comment"
+                ></textarea>
+            </div>
+
+            <actions
+                [theme]="getThemeClass()"
+                [mainButtonText]="'Оценить'"
+                (mainButtonAction)="ratingClick()"
+                [secondaryButtonText]="'Отмена'"
+                (secondaryButtonAction)="ratingCancelClick()"
+            >
+            </actions>
+        </form>
+
+        <div *ngIf="ratingSuccessBlock" class="sucess-block">
+            <div class="title">
+                Спасибо за оценку!
+            </div>
+            <span class="emoji">
+                👍
+            </span>
+
+        </div>
+    </div>
+</ng-template>

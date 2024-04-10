@@ -1,0 +1,33 @@
+<div *ngIf="mainButtonText || secondaryButtonText" class="askrobot-actions">
+    <button
+        *ngIf="mainButtonText"
+        class="button main-button"
+        [ngClass]="theme"
+        (click)="mainButtonClick()"
+    >
+        <ng-container *ngIf="mainButtonComponent">
+            <span class="icon">
+                <ng-container *ngTemplateOutlet="mainButtonComponent"></ng-container>
+            </span>
+        </ng-container>
+        <span>
+            {{mainButtonText}}
+        </span>
+    </button>
+    <button
+        *ngIf="secondaryButtonText"
+        class="button secondary-button"
+        [ngClass]="theme"
+        type="button"
+        (click)="secondaryButtonClick()"
+    >
+        <ng-container *ngIf="secondaryButtonComponent">
+            <span class="icon">
+                <ng-container *ngTemplateOutlet="secondaryButtonComponent"></ng-container>
+            </span>
+        </ng-container>
+        <span>
+            {{secondaryButtonText}}
+        </span>
+    </button>
+</div>
