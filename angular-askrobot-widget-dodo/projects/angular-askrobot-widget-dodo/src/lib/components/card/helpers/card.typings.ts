@@ -1,0 +1,1 @@
+export type CardThemeType = 'dark' | 'light';

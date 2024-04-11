@@ -1,0 +1,54 @@
+.askrobot-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+
+    .button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 7px 16px;
+        border: none;
+        background: none;
+        font-size: 12px;
+        line-height: 16px;
+        border-radius: 16px;
+        cursor: pointer;
+
+        .icon {
+            margin-top: 2px;
+        }
+
+        &.main-button {
+            font-weight: 700;
+
+            &.dark {
+                background: #fff;
+                color: #000;
+            }
+
+            &.light {
+                background: #8372B6;
+                color: #fff;
+            }
+        }
+
+        &.secondary-button {
+            background-color: transparent;
+            padding: 5.5px 16px;
+
+            &.dark {
+                border: 1px solid #FFFFFF29;
+                color: #fff;
+            }
+
+            &.light {
+                border: 1px solid #00000052;
+                color: #000;
+            }
+        }
+    }
+
+}
