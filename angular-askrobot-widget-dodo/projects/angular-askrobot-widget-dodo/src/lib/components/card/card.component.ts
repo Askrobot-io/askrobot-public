@@ -57,6 +57,10 @@ export class CardComponent implements OnChanges {
 
   ratingClick() {
     this.ratingSuccessBlock = true;
+    setTimeout(() => {
+      this.showRatingBlock = false;
+      this.ratingSuccessBlock = false;
+    }, 2000)
   }
 
   searchCancelClick() {
@@ -65,6 +69,8 @@ export class CardComponent implements OnChanges {
 
   ratingCancelClick() {
     this.showRatingBlock = false;
+    this.rating = 0;
+    this.hoverRating = 0;
   }
 
   onStarHover(index: number): void {
@@ -89,11 +95,15 @@ export class CardComponent implements OnChanges {
   }
 
   getLogoColor() {
-    return this.theme === CardTheme.DARK ? "#fff" : "#26BD00";
+    return this.theme === CardTheme.DARK ? "#fff" : "#141414";
   }
 
   getSearchIconColor() {
     return this.theme === CardTheme.DARK ? "#323232" : "#fff";
+  }
+
+  getFilledStarColor() {
+    return this.theme === CardTheme.DARK ? "#FAFAFA" : "#141414";
   }
 
 }

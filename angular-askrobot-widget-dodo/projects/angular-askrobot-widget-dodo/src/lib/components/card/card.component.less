@@ -1,10 +1,11 @@
-@darkBg: #343F51;
-@lightBg: #F3EFFF;
+@darkBg: #434343;
+@lightBg: #F0F0F0;
 @darkColor: #000;
 @lightColor: #fff;
-@cardBorderRadius: 16px 16px 0px 16px;
+@footerDark: #595959;
+@footerLight: #D9D9D9;
+@cardBorderRadius: 16px 16px 16px 16px;
 @minCardHeight: 71px;
-@grayishColor: #00000014;
 
 
 @keyframes bounce {
@@ -15,29 +16,21 @@
     100% { transform: translateY(0); }
 }
 
-@keyframes loading1 {
+@keyframes loading {
     0% {
-      transform: translateY(0);
+        transform: translateY(0);
     }
     50% {
-      transform: translateY(-8px);
+        transform: translateY(-8px);
+    }
+    60% {
+        transform: translateY(-8px);
     }
     100% {
-      transform: translateY(0);
+        transform: translateY(0);
     }
   }
 
-  @keyframes loading0 {
-    0% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-8px);
-    }
-    100% {
-      transform: translateY(0);
-    }
-  }
 
 .askrobot-card {
     * {
@@ -52,6 +45,7 @@
     font-size: 16px;
     line-height: 16px;
     border-radius: @cardBorderRadius;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";;
 
     &.dark {
         background-color: @darkBg;
@@ -63,43 +57,39 @@
         color: @darkColor;
     }
 
-    .status {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 91px;
-        font-size: 14px;
-        font-weight: 700;
-        text-align: center;
-        padding: 4px 16px 6px 12px;
-        border-radius: 0px 16px 0px 8px;
-    }
-
     .card-wrapper {
         display: flex;
         gap: 6px;
         padding: 16px 32px 16px 15px;
 
-        .title {
-            font-weight: 700;
-            text-decoration: underline;
-            text-underline-offset: 4px;
+        .first-block {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
 
-            &.no-underline {
-                text-decoration: none;
+            .title {
+                font-weight: 700;
+
+                &.dark {
+                    color: @lightColor;
+                }
+
+                &.light {
+                    color: @darkColor;
+                }
             }
 
-            &.dark {
-                color: @lightColor;
-            }
-
-            &.light {
-                color: @darkColor;
+            .status {
+                margin-right: -20px;
+                padding: 2px 8px;
+                font-size: 12px;
+                text-align: center;
+                border-radius: 8px;
             }
         }
 
         .block {
-            margin-top: 15px;
+            margin: 15px 0px;
         }
 
         .warning {
@@ -119,8 +109,7 @@
 
             &.light {
                 color: @darkColor;
-                background: @grayishColor;
-
+                background: @footerLight;
             }
         }
     }
@@ -160,7 +149,7 @@
 
 
         &.dark {
-            background: #2C3648;
+            background: @footerDark;
 
             &:after {
                 background-image: radial-gradient(circle, #212C40 10%, transparent 10.01%);
@@ -168,7 +157,7 @@
         }
 
         &.light {
-            background: @grayishColor;
+            background: @footerLight;
 
             &:after {
                 background-image: radial-gradient(circle, #9abeff 10%, transparent 10.01%);
@@ -219,15 +208,15 @@
             }
 
             & span:nth-child(1){
-                animation: loading1 300ms ease-out infinite;
+                animation: loading 800ms ease-out 0.2s infinite;
             }
 
             & span:nth-child(2){
-                animation: loading0 600ms ease-out infinite;
+                animation: loading 800ms ease-out 0.1s infinite;
             }
 
             & span:nth-child(3){
-                animation: loading1 300ms ease-out infinite;
+                animation: loading 800ms ease-out infinite;
             }
         }
     }
@@ -262,26 +251,29 @@
                 padding: 0;
                 cursor: pointer;
 
-                & .hide {
-                    display: none;
-                }
             }
         }
         .textarea {
             margin-top: 4px;
-            border-radius: 4px;
+            padding: 9px;
+            border-radius: 8px;
+            width: 100%;
             resize: none;
             font-size: 14px;
-            background: transparent;
+            line-height: 22px;
+
+            &::placeholder {
+                font-size: 14px;
+            }
 
             &.dark {
                 color: @lightColor;
-                border: 1px solid #FFFFFFA3
+                background: #434343;
             }
 
             &.light {
                 color: @darkColor;
-                border: 1px solid #000000A3;
+                background: #fff;
             }
 
             &:active,
@@ -290,6 +282,10 @@
             &:focus-within {
                 outline: none;
             }
+        }
+
+        .actions {
+            margin-top: 10px;
         }
 
         .sucess-block {
@@ -311,10 +307,20 @@
         }
     }
 
+    .rating-stars {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: 20px;
+    }
+
+    .hide {
+        display: none;
+    }
+
 }
 
 :host ::ng-deep .description {
-    margin-top: 10px;
     max-width: 370px;
     word-wrap: break-word;
     line-height: 20px;

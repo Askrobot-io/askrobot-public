@@ -1,18 +1,20 @@
 <div class="askrobot-card" [ngClass]="getThemeClass()">
     <ng-container *ngIf="!(this.isLoading || this.showSearchConfirmation)">
-        <div
-            *ngIf="statusText"
-            class="status"
-            [ngStyle]="{'backgroundColor': statusBgColor, 'color': statusColor }"
-        >
-            {{statusText}}
-        </div>
         <div class="card-wrapper">
             <askrobot-logo-icon [color]="getLogoColor()"></askrobot-logo-icon>
 
             <div>
-                <div class="title" [ngClass]="getThemeClass()">
-                    {{title}}
+                <div class="first-block">
+                    <div class="title" [ngClass]="getThemeClass()">
+                        {{title}}
+                    </div>
+                    <div
+                        *ngIf="statusText"
+                        class="status"
+                        [ngStyle]="{'backgroundColor': statusBgColor, 'color': statusColor }"
+                    >
+                        {{statusText}}
+                    </div>
                 </div>
 
 
@@ -33,18 +35,19 @@
                 >
                 </div>
 
-                <actions
-                    *ngIf="expanded && !showRatingBlock" [theme]="getThemeClass()"
-                    [mainButtonText]="showSearch ? 'Поискать в статьях' : ''"
-                    [mainButtonComponent]="searchIcon"
-                    (mainButtonAction)="searchConfirmationClick()"
-                    [secondaryButtonText]="showRating ? 'Оценить ответ' : ''"
-                    [secondaryButtonComponent]="ratingIcon"
-                    (secondaryButtonAction)="ratingBlockClick()"
-                >
-                </actions>
             </div>
         </div>
+        <actions
+            *ngIf="expanded && !showRatingBlock" [theme]="getThemeClass()"
+            [mainButtonText]="showSearch ? 'Найти в статьях' : ''"
+            [mainButtonIcon]="searchIcon"
+            (mainButtonAction)="searchConfirmationClick()"
+            [secondaryButtonText]="showRating && rating == 0 ? 'Оценить ответ' : ''"
+            [secondaryButtonIcon]="ratingIcon"
+            [secondaryButtonComponent]="rating > 0 ? ratingStars : null"
+            (secondaryButtonAction)="ratingBlockClick()"
+        >
+        </actions>
 
         <ng-container *ngIf="showRatingBlock">
             <ng-container *ngTemplateOutlet="ratingBlock">
@@ -73,7 +76,7 @@
         <div class="card-wrapper">
             <askrobot-logo-icon [color]="getLogoColor()"></askrobot-logo-icon>
             <div>
-                <div class="title no-underline" [ngClass]="getThemeClass()">
+                <div class="title" [ngClass]="getThemeClass()">
                     Вы точно хотите поискать ответ в статьях?
                 </div>
 
@@ -84,10 +87,11 @@
                 <actions
                     [theme]="getThemeClass()"
                     [mainButtonText]="'Да, искать в статьях'"
-                    [mainButtonComponent]="searchIcon"
+                    [mainButtonIcon]="searchIcon"
                     (mainButtonAction)="searchClick()"
                     [secondaryButtonText]="'Отмена'"
                     (secondaryButtonAction)="searchCancelClick()"
+                    [hasBackground]="false"
                 >
                 </actions>
             </div>
@@ -104,6 +108,21 @@
     <rating-icon [color]="getIconColor()"></rating-icon>
 </ng-template>
 
+<ng-template #ratingStars>
+    <div class="rating-stars">
+        <div
+            *ngFor="let item of [1, 2, 3, 4, 5]; let i = index"
+        >
+            <span [ngClass]="{'hide': i > rating}">
+                <filled-star-icon [color]="getFilledStarColor()"></filled-star-icon>
+            </span>
+            <span [ngClass]="{'hide': i <= rating}">
+                <star-icon></star-icon>
+            </span>
+        </div>
+    </div>
+</ng-template>
+
 <ng-template #ratingBlock>
     <div class="rating-block" [ngClass]="getThemeClass()">
         <form *ngIf="!ratingSuccessBlock" (ngSubmit)="ratingClick()">
@@ -117,12 +136,13 @@
                         (mouseover)="onStarHover(i)"
                         (mouseleave)="onStarLeave()"
                         (click)="onStarClick(i)"
+                        type="button"
                     >
                         <span [ngClass]="{'hide': i > hoverRating}">
-                            <filled-star-icon [color]="getIconColor()"></filled-star-icon>
+                            <filled-star-icon [color]="getFilledStarColor()"></filled-star-icon>
                         </span>
                         <span [ngClass]="{'hide': i <= hoverRating}">
-                            <star-icon [color]="getIconColor()"></star-icon>
+                            <star-icon></star-icon>
                         </span>
                     </button>
                 </div>
@@ -136,20 +156,24 @@
                     class="textarea"
                     [ngClass]="getThemeClass()"
                     name="comment"
-                    rows="5"
+                    rows="3"
                     cols="30"
+                    placeholder="Почему по вашему мнению, ответ вам не подошел?"
                     [(ngModel)]="comment"
                 ></textarea>
             </div>
 
-            <actions
-                [theme]="getThemeClass()"
-                [mainButtonText]="'Оценить'"
-                (mainButtonAction)="ratingClick()"
-                [secondaryButtonText]="'Отмена'"
-                (secondaryButtonAction)="ratingCancelClick()"
-            >
-            </actions>
+            <div class="actions">
+                <actions
+                    [theme]="getThemeClass()"
+                    [mainButtonText]="'Оценить'"
+                    (mainButtonAction)="ratingClick()"
+                    [secondaryButtonText]="'Отмена'"
+                    (secondaryButtonAction)="ratingCancelClick()"
+                    [hasBackground]="false"
+                >
+                </actions>
+            </div>
         </form>
 
         <div *ngIf="ratingSuccessBlock" class="sucess-block">
