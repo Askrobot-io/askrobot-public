@@ -13,9 +13,11 @@ export class ActionsComponent {
   @Input() theme: CardTheme = CardTheme.DARK
 
   @Input() mainButtonText = "";
-  @Input() mainButtonComponent: TemplateRef<any> | null = null;
+  @Input() mainButtonIcon: TemplateRef<any> | null = null;
   @Input() secondaryButtonText: string = "#fff";
+  @Input() secondaryButtonIcon: TemplateRef<any> | null = null;
   @Input() secondaryButtonComponent: TemplateRef<any> | null = null;
+  @Input() hasBackground: boolean = true;
 
   @Output() mainButtonAction = new EventEmitter<void>();
   @Output() secondaryButtonAction = new EventEmitter<void>();
