@@ -62,22 +62,23 @@
         gap: 6px;
         padding: 16px 32px 16px 15px;
 
+        .title {
+            font-weight: 700;
+
+            &.dark {
+                color: @lightColor;
+            }
+
+            &.light {
+                color: @darkColor;
+            }
+        }
+
         .first-block {
             display: flex;
             align-items: start;
             justify-content: space-between;
 
-            .title {
-                font-weight: 700;
-
-                &.dark {
-                    color: @lightColor;
-                }
-
-                &.light {
-                    color: @darkColor;
-                }
-            }
 
             .status {
                 margin-right: -20px;
@@ -90,6 +91,7 @@
 
         .block {
             margin: 15px 0px;
+            line-height: 20px;
         }
 
         .warning {
@@ -320,10 +322,15 @@
 
 }
 
-:host ::ng-deep .description {
+:host ::ng-deep .answer {
     max-width: 370px;
+    margin-top: 8px;
     word-wrap: break-word;
     line-height: 20px;
+
+    p {
+        display: inline;
+    }
 
     overflow: hidden;
     -webkit-box-orient: vertical;

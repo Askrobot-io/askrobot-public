@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
 import { TruncatePipe } from './pipes/truncate.pipe';
 
@@ -14,11 +15,12 @@ import { CardComponent } from './card.component';
     declarations: [CardComponent, TruncatePipe],
     exports: [CardComponent],
     imports: [
+        HttpClientModule,
         CommonModule,
         FormsModule,
         SharedModule,
         ActionsModule,
-        IconsModule
+        IconsModule,
     ],
 })
 export class CardModule { }

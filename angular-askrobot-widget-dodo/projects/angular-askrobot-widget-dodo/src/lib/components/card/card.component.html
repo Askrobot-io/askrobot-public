@@ -1,4 +1,4 @@
-<div class="askrobot-card" [ngClass]="getThemeClass()">
+<div *ngIf="clientId && token" class="askrobot-card" [ngClass]="getThemeClass()">
     <ng-container *ngIf="!(this.isLoading || this.showSearchConfirmation)">
         <div class="card-wrapper">
             <askrobot-logo-icon [color]="getLogoColor()"></askrobot-logo-icon>
@@ -6,14 +6,13 @@
             <div>
                 <div class="first-block">
                     <div class="title" [ngClass]="getThemeClass()">
-                        {{title}}
+                        {{question}}
                     </div>
                     <div
-                        *ngIf="statusText"
                         class="status"
                         [ngStyle]="{'backgroundColor': statusBgColor, 'color': statusColor }"
                     >
-                        {{statusText}}
+                        {{isStandard ? "Стандарт" : "Статья"}}
                     </div>
                 </div>
 
@@ -28,23 +27,25 @@
                 </div>
 
                 <div
-                    class="description"
+                    *ngIf="answer"
+                    class="answer"
                     [ngClass]="getThemeClass()"
                     [class.expanded]="expanded"
-                    [innerHTML]="description | sanitiser" [style.-webkitLineClamp]="previewDescriptionLines"
+                    [innerHTML]="answer | markdown"
+                    [style.-webkitLineClamp]="previewAnswerLines"
                 >
                 </div>
 
             </div>
         </div>
         <actions
-            *ngIf="expanded && !showRatingBlock" [theme]="getThemeClass()"
+            *ngIf="expanded && !showRatingBlock && !isStreaming" [theme]="getThemeClass()"
             [mainButtonText]="showSearch ? 'Найти в статьях' : ''"
             [mainButtonIcon]="searchIcon"
             (mainButtonAction)="searchConfirmationClick()"
-            [secondaryButtonText]="showRating && rating == 0 ? 'Оценить ответ' : ''"
+            [secondaryButtonText]="!ratingSubmitted ? 'Оценить ответ' : ''"
             [secondaryButtonIcon]="ratingIcon"
-            [secondaryButtonComponent]="rating > 0 ? ratingStars : null"
+            [secondaryButtonComponent]="ratingSubmitted ? ratingStars : null"
             (secondaryButtonAction)="ratingBlockClick()"
         >
         </actions>
@@ -90,6 +91,7 @@
                     [mainButtonIcon]="searchIcon"
                     (mainButtonAction)="searchClick()"
                     [secondaryButtonText]="'Отмена'"
+                    [secondaryButtonStyles]="true"
                     (secondaryButtonAction)="searchCancelClick()"
                     [hasBackground]="false"
                 >
