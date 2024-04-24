@@ -19,11 +19,8 @@ export class CardComponent implements OnChanges {
   // optional
   @Input() userId: string = "";
   @Input() theme: CardThemeType = CardTheme.DARK
-  @Input() statusBgColor: string = "#fff";
-  @Input() statusColor: string = "#000";
   @Input() isExpandable: boolean = true;
   @Input() previewAnswerLines: number = 4;
-  @Input() warningText: string = "";
 
   answer = "";
   scope: Scope = SCOPE.STANDARDS;
@@ -31,6 +28,7 @@ export class CardComponent implements OnChanges {
   isStreaming = true;
   isStandard = false;
   showSearch = false;
+  showWarning = false;
 
   expanded = false;
   showSearchConfirmation = false;
@@ -49,11 +47,16 @@ export class CardComponent implements OnChanges {
       this.expanded = !this.isExpandable;
     }
     this.fetchData();
+    this.answer = "";
+    this.isStandard = false;
+    this.showWarning = false;
+    this.showSearch = false;
   }
 
   async fetchData() {
     if (!this.token || !this.clientId) return;
     const ctrl = new AbortController();
+    this.isLoading = true;
 
     const body: Record<string, any> = {
       question: this.question,
@@ -80,7 +83,6 @@ export class CardComponent implements OnChanges {
       onmessage: (ev) => {
         try {
           let message = JSON.parse(ev.data)
-          this.isLoading = true;
           this.isStreaming = true;
 
           if (message != null && message.id != null) {
@@ -90,6 +92,7 @@ export class CardComponent implements OnChanges {
               this.isStreaming = false;
               this.answer = message.markdown;
               this.isStandard = message.is_standard;
+              this.showWarning = !message.is_standard;
               this.showSearch = message.has_answer_in_articles;
             }
           }

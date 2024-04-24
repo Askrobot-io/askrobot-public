@@ -1,67 +1,52 @@
 <div class="askrobot-app">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <input type="text" placeholder="Введите вопрос" formControlName="question">
+        <button type="submit">Искать</button>
+      </form>
+
     <div class="block">
         <h1>Default</h1>
 
-        <default-askrobot-card></default-askrobot-card>
+        <default-askrobot-card [question]="question"></default-askrobot-card>
     </div>
 
     <div class="block">
-        <button (click)="onShowLightThemeDefault()">
+        <button (click)="onShowLightThemeDefault()" type="button">
             Show Light Theme Default
         </button>
         <ng-container *ngIf="showLightThemeDefault">
             <h1>Light Theme Default</h1>
-            <default-askrobot-card [theme]="'light'"></default-askrobot-card>
+            <default-askrobot-card  [question]="question" [theme]="'light'"></default-askrobot-card>
         </ng-container>
     </div>
 
     <div class="block">
-        <button (click)="onShowCustomStyleStatus()">
-            Show Custom Style Status
-        </button>
-        <ng-container *ngIf="showCustomStyleStatus">
-            <h1>Custom Style Status</h1>
-            <custom-style-status-askrobot-card></custom-style-status-askrobot-card>
-        </ng-container>
-    </div>
-
-    <div class="block">
-        <button (click)="onShowWarning()">
-            Show Warning
-        </button>
-        <ng-container *ngIf="showWarning">
-            <h1>Warning</h1>
-            <warning-askrobot-card></warning-askrobot-card>
-        </ng-container>
-    </div>
-
-    <div class="block">
-        <button (click)="onCustomLines()">
+        <button (click)="onCustomLines()" type="button">
             Show Custom lines
         </button>
         <ng-container *ngIf="showCustomLines">
             <h1>Custom lines any number</h1>
-            <custom-lines-askrobot-card></custom-lines-askrobot-card>
+            <custom-lines-askrobot-card [question]="question"></custom-lines-askrobot-card>
         </ng-container>
     </div>
 
     <div class="block">
-        <button (click)="onNotExpandable()">
+        <button (click)="onNotExpandable()" type="button">
             Show Not expandable
         </button>
         <ng-container *ngIf="showNotExapandable">
             <h1>Not expandable</h1>
-            <not-expandable-askrobot-card></not-expandable-askrobot-card>
+            <not-expandable-askrobot-card [question]="question"></not-expandable-askrobot-card>
         </ng-container>
     </div>
 
     <div class="block">
-        <button (click)="onLightThemeAllProps()">
+        <button (click)="onLightThemeAllProps()" type="button">
             Show Light theme with all props
         </button>
         <ng-container *ngIf="showLightThemeAllProps">
             <h1>Light theme with all props</h1>
-            <light-theme-askrobot-card></light-theme-askrobot-card>
+            <light-theme-askrobot-card [question]="question"></light-theme-askrobot-card>
         </ng-container>
     </div>
 </div>

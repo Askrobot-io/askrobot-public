@@ -10,18 +10,18 @@
                     </div>
                     <div
                         class="status"
-                        [ngStyle]="{'backgroundColor': statusBgColor, 'color': statusColor }"
+                        [class.is-standard]="isStandard"
                     >
                         {{isStandard ? "Стандарт" : "Статья"}}
                     </div>
                 </div>
 
 
-                <div *ngIf="warningText" class="warning" [ngClass]="getThemeClass()">
+                <div *ngIf="showWarning" class="warning" [ngClass]="getThemeClass()">
                     <warning-icon [color]="getIconColor()"></warning-icon>
 
                     <span>
-                        {{warningText}}
+                        Информация не является стандартом Додо
                     </span>
 
                 </div>

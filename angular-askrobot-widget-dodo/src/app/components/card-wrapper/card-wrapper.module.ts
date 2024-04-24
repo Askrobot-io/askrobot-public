@@ -5,8 +5,6 @@ import { CardModule } from 'projects/angular-askrobot-widget-dodo/src/lib/compon
 
 import { DefaultCardComponent } from './components/default-card.component';
 import { LightThemeCardComponent } from './components/light-theme.card.component';
-import { CustomStyleStatusCardComponent } from './components/custom-style-status.card.component';
-import { WarningCardComponent } from './components/warning.card.component';
 import { CustomLinesCardComponent } from './components/custom-lines-card.component';
 import { NotExpandableCardComponent } from './components/not-expandable.card.component';
 
@@ -14,16 +12,12 @@ import { NotExpandableCardComponent } from './components/not-expandable.card.com
     declarations: [
         DefaultCardComponent,
         LightThemeCardComponent,
-        CustomStyleStatusCardComponent,
-        WarningCardComponent,
         CustomLinesCardComponent,
         NotExpandableCardComponent,
     ],
     exports: [
         DefaultCardComponent,
         LightThemeCardComponent,
-        CustomStyleStatusCardComponent,
-        WarningCardComponent,
         CustomLinesCardComponent,
         NotExpandableCardComponent,
     ],

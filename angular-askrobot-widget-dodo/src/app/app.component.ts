@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, QueryList, ViewChildren } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { fromEvent } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'askrobot-app',
@@ -6,23 +9,25 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.less']
 })
 export class AppComponent {
+  form: FormGroup;
+  question = '';
   showLightThemeDefault = false;
-  showCustomStyleStatus = false;
-  showWarning = false;
   showCustomLines = false;
   showNotExapandable = false;
   showLightThemeAllProps = false;
 
+  constructor(private fb: FormBuilder) {
+    this.form = this.fb.group({
+      question: ['']
+    });
+  }
+
+  onSubmit() {
+    this.question = this.form.get('question')?.value || "";
+  }
+
   onShowLightThemeDefault() {
     this.showLightThemeDefault = !this.showLightThemeDefault;
-  }
-
-  onShowCustomStyleStatus() {
-    this.showCustomStyleStatus = !this.showCustomStyleStatus;
-  }
-
-  onShowWarning() {
-    this.showWarning = !this.showWarning;
   }
 
   onCustomLines() {
