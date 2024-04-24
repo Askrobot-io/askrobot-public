@@ -56,6 +56,7 @@ export class CardComponent implements OnChanges {
   async fetchData() {
     if (!this.token || !this.clientId) return;
     const ctrl = new AbortController();
+    let last_created_at = 0;
     this.isLoading = true;
 
     const body: Record<string, any> = {
@@ -82,15 +83,16 @@ export class CardComponent implements OnChanges {
       signal: ctrl.signal,
       onmessage: (ev) => {
         try {
-          let message = JSON.parse(ev.data)
+          let message = JSON.parse(ev.data);
           this.isStreaming = true;
 
-          if (message != null && message.id != null) {
+          if (message != null && message.id != null && message.created_at >= last_created_at) {
+            last_created_at = message.created_at; // HOT FIX: checking that the messages are going sequentially
             this.isLoading = false;
             this.answer = message.answer;
             if (!message.streaming) {
               this.isStreaming = false;
-              this.answer = message.markdown;
+              this.answer = message.markdown.replace(/\\\./gi, '.'); // HOT FIX: unescape dot(.) for `marked` module
               this.isStandard = message.is_standard;
               this.showWarning = !message.is_standard;
               this.showSearch = message.has_answer_in_articles;
