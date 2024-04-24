@@ -17,6 +17,7 @@ export class ActionsComponent {
   @Input() secondaryButtonText: string = "#fff";
   @Input() secondaryButtonIcon: TemplateRef<any> | null = null;
   @Input() secondaryButtonComponent: TemplateRef<any> | null = null;
+  @Input() secondaryButtonStyles = false;
   @Input() hasBackground: boolean = true;
 
   @Output() mainButtonAction = new EventEmitter<void>();

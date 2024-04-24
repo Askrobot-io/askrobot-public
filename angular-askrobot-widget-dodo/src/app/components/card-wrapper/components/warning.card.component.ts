@@ -1,21 +1,22 @@
 import { Component } from '@angular/core';
 
-import { DEFAULT_DESCRIPTION, DEFAULT_STATUS_TEXT, DEFAULT_TITLE } from '../helpers/card-wrapper-consts';
+import { DEFAULT_CLIENT_ID, DEFAULT_QUESTION } from '../helpers/card-wrapper-consts';
+import { TOKEN } from 'environment';
 
 @Component({
   selector: 'warning-askrobot-card',
   template: `
     <askrobot-card
-        [title]="title"
-        [description]="description"
-        [statusText]="statusText"
+        [question]="question"
+        [token]="token"
+        [clientId]="clientId"
         [warningText]="'Информация не является стандартом Додо'"
     ></askrobot-card>
   `
 })
 
 export class WarningCardComponent {
-    title = DEFAULT_TITLE
-    description = DEFAULT_DESCRIPTION
-    statusText = DEFAULT_STATUS_TEXT
+    question = DEFAULT_QUESTION
+    token = TOKEN
+    clientId = DEFAULT_CLIENT_ID
 }

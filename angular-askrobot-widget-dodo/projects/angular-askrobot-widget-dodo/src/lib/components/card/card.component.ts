@@ -1,7 +1,9 @@
 import { Component, Input, OnChanges } from '@angular/core';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { HttpClient } from '@angular/common/http';
 
-import { CardTheme } from './helpers/card.consts';
-import { CardThemeType } from './helpers/card.typings';
+import { ASKROBOT_URL, CardTheme, SCOPE } from './helpers/card.consts';
+import { CardThemeType, Scope } from './helpers/card.typings';
 
 @Component({
   selector: 'askrobot-card',
@@ -10,20 +12,25 @@ import { CardThemeType } from './helpers/card.typings';
 })
 export class CardComponent implements OnChanges {
 
-  @Input() title : string = "";
-  @Input() description : string = "";
-  @Input() statusText : string = "";
+  @Input() question: string = "";
+  @Input() clientId: string = "";
+  @Input() token: string = "";
 
   // optional
+  @Input() userId: string = "";
   @Input() theme: CardThemeType = CardTheme.DARK
-  @Input() isLoading = false;
   @Input() statusBgColor: string = "#fff";
   @Input() statusColor: string = "#000";
   @Input() isExpandable: boolean = true;
-  @Input() previewDescriptionLines: number = 4;
+  @Input() previewAnswerLines: number = 4;
   @Input() warningText: string = "";
-  @Input() showSearch: boolean = false;
-  @Input() showRating: boolean = false;
+
+  answer = "";
+  scope: Scope = SCOPE.STANDARDS;
+  isLoading = true;
+  isStreaming = true;
+  isStandard = false;
+  showSearch = false;
 
   expanded = false;
   showSearchConfirmation = false;
@@ -31,13 +38,68 @@ export class CardComponent implements OnChanges {
   ratingSuccessBlock = false;
   hoverRating = 0;
   // form
+  ratingSubmitted = false;
   rating = 0;
   comment = '';
+
+  constructor(private http: HttpClient) { }
 
   ngOnChanges() {
     if (this.isExpandable !== undefined) {
       this.expanded = !this.isExpandable;
     }
+    this.fetchData();
+  }
+
+  async fetchData() {
+    if (!this.token || !this.clientId) return;
+    const ctrl = new AbortController();
+
+    const body: Record<string, any> = {
+      question: this.question,
+      protocol: "sse",
+      scope: this.scope,
+      engine: "answer",
+      client: this.clientId,
+    };
+
+    if (this.userId) {
+      body.user_info = {
+        id: this.userId,
+      }
+    }
+
+    await fetchEventSource(ASKROBOT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': "application/json",
+        'Authorization': "Bearer " + this.token,
+      },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+      onmessage: (ev) => {
+        try {
+          let message = JSON.parse(ev.data)
+          this.isLoading = true;
+          this.isStreaming = true;
+
+          if (message != null && message.id != null) {
+            this.isLoading = false;
+            this.answer = message.answer;
+            if (!message.streaming) {
+              this.isStreaming = false;
+              this.answer = message.markdown;
+              this.isStandard = message.is_standard;
+              this.showSearch = message.has_answer_in_articles;
+            }
+          }
+
+        } catch (error) {
+          this.isLoading = false;
+          console.error("Error receiving messages", error);
+        }
+      }
+    });
   }
 
   toggleExpand() {
@@ -53,14 +115,41 @@ export class CardComponent implements OnChanges {
   }
 
   searchClick() {
+    this.scope = SCOPE.ARTICLES;
+    this.showSearchConfirmation = false;
+    this.isLoading = true;
+    this.fetchData();
   }
 
   ratingClick() {
     this.ratingSuccessBlock = true;
-    setTimeout(() => {
-      this.showRatingBlock = false;
-      this.ratingSuccessBlock = false;
-    }, 2000)
+    const reviewData = {
+      api: true,
+      engine: 'event',
+      client: this.clientId,
+      question: this.question,
+      rating: this.rating + 1,
+      message: this.comment
+    };
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + this.token
+    };
+
+    this.http.post<any>(ASKROBOT_URL, reviewData, { headers })
+      .subscribe(
+        (res) => {
+          this.ratingSubmitted = true;
+          this.showRatingBlock = false;
+          this.ratingSuccessBlock = false;
+          this.rating = 0;
+          this.hoverRating = 0;
+          this.comment = '';
+        },
+        (error) => {
+          console.error('Error posting review', error);
+        }
+      );
   }
 
   searchCancelClick() {

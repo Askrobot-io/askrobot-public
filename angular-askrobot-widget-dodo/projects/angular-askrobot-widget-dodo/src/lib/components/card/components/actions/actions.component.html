@@ -1,5 +1,5 @@
 <div
-    *ngIf="mainButtonText || secondaryButtonText"
+    *ngIf="mainButtonText || secondaryButtonText || secondaryButtonComponent"
     class="askrobot-actions"
     [class.background]="hasBackground"
     [ngClass]="theme"
@@ -23,6 +23,8 @@
         *ngIf="secondaryButtonText"
         class="button secondary-button"
         [ngClass]="theme"
+        [class.secondary-style]="secondaryButtonStyles"
+        [class.align-left]="!mainButtonText"
         type="button"
         (click)="secondaryButtonClick()"
     >

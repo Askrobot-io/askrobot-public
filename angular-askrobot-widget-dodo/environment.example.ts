@@ -1,0 +1,1 @@
+export const TOKEN = "USER_TOKEN";
