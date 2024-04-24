@@ -9,20 +9,21 @@ import { CardTheme } from 'projects/angular-askrobot-widget-dodo/src/lib/compone
   selector: 'default-askrobot-card',
   template: `
     <askrobot-card
-        [question]="question"
+        [question]="_question"
         [token]="token"
         [clientId]="clientId"
         [theme]="theme"
-        [statusBgColor]="'#FFD700'"
-        [statusColor]="'rgba(0, 0, 0, 0.64)'"
     ></askrobot-card>
   `
 })
 
 export class DefaultCardComponent {
-    question = DEFAULT_QUESTION
-    token = TOKEN
-    clientId = DEFAULT_CLIENT_ID
+  @Input() theme: CardThemeType = CardTheme.DARK
+  @Input() set question(value: string) {
+    this._question = value || DEFAULT_QUESTION;
+  }
+  _question = ""
+  token = TOKEN
+  clientId = DEFAULT_CLIENT_ID
 
-    @Input() theme: CardThemeType = CardTheme.DARK
 }
