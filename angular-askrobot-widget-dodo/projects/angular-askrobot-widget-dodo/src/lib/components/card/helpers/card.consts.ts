@@ -8,4 +8,4 @@ export enum SCOPE {
     ARTICLES = 'articles',
 }
 
-export const ASKROBOT_URL = "https://askrobot-20240421-1548.azurewebsites.net";
+export const ASKROBOT_URL = "https://askrobot.azurewebsites.net";
