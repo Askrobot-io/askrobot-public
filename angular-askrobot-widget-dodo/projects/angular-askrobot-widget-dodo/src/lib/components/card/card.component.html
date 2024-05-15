@@ -9,6 +9,7 @@
                         {{question}}
                     </div>
                     <div
+                        *ngIf="isStandard !== null"
                         class="status"
                         [class.is-standard]="isStandard"
                     >
