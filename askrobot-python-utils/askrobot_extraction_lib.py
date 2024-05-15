@@ -2,13 +2,13 @@ import os
 import re
 import copy
 import json
+import tiktoken
 import html2text
 from readability import Document
 from bs4 import BeautifulSoup
 from tabulate import tabulate
 
-import tiktoken
-from askrobot_common_lib import ( OPENAI_EMBEDDING )
+OPENAI_EMBEDDING = 'text-embedding-ada-002'
 
 
 #
