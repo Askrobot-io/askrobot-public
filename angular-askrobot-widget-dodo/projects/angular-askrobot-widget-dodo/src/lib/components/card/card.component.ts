@@ -26,7 +26,7 @@ export class CardComponent implements OnChanges {
   scope: Scope = SCOPE.STANDARDS;
   isLoading = true;
   isStreaming = true;
-  isStandard = false;
+  isStandard: boolean | null = null;
   showSearch = false;
   showWarning = false;
 
@@ -48,7 +48,7 @@ export class CardComponent implements OnChanges {
     }
     this.fetchData();
     this.answer = "";
-    this.isStandard = false;
+    this.isStandard = null;
     this.showWarning = false;
     this.showSearch = false;
   }
