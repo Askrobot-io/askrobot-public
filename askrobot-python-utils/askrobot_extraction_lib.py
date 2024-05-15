@@ -10,65 +10,6 @@ from tabulate import tabulate
 import tiktoken
 from askrobot_common_lib import ( OPENAI_EMBEDDING )
 
-from pprint import pprint
-
-SCRIPT_DIR = os.path.realpath( os.path.dirname( __file__ ) )
-
-
-#
-# Cities
-#
-cities_hash = {}
-cities_file = SCRIPT_DIR + '/cities.json'
-if os.path.isfile( cities_file ):
-    with open( cities_file, encoding="utf8" ) as f:
-        cities_hash = json.load( f )
-
-def get_cities_from_text( country, text ):
-    city_names = []
-    if (
-        country != None
-        and isinstance( country, str )
-        and country.strip() != ""
-        and text != None
-        and text.strip() != ""
-    ):
-        country_lc = country.lower()
-        if (
-            country_lc in cities_hash
-            and cities_hash[ country_lc ] != None
-            and len( cities_hash[ country_lc ] ) > 0
-        ):
-            text_lc = text.lower()
-
-            cities = cities_hash[ country_lc ]
-            for i, city in enumerate( cities ):
-                if 'type' not in city:
-                    cities[ i ]['type'] = 'weak'
-
-            for city in cities:
-                city_lc = city['key'].lower()
-                if (
-                    city['label'] not in city_names
-                    and (
-                        city['type'] == 'strong'
-                        and re.search( "[^а-яА-Я]" + city_lc + "[^а-яА-Я]|^" + city_lc + "[^а-яА-Я]|[^а-яА-Я]" + city_lc + "$|^" + city_lc + "$", text_lc ) != None
-
-                        or
-
-                        city['type'] == 'weak'
-                        and (
-                            city_lc in text_lc
-                            or city_lc.replace("-", " ") in text_lc
-                            or city_lc.replace("-", "") in text_lc
-                        )
-                    )
-                ):
-                    city_names.append( city['label'] )
-
-    return city_names
-
-
 
 #
 # Text
