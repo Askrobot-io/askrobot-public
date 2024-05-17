@@ -245,7 +245,6 @@ def scrape_notion(task_config):
             to_scrape = [obj]
 
             for i in range(task_config['n_levels']):
-
                 if len(children_new) != len(children):
                     print('Scraping level ', i + 1)
                     children_objs = []
@@ -254,6 +253,9 @@ def scrape_notion(task_config):
                         children_objs_s, children_new = add_children(client, p, task_config['exclude_pages'], children)
                         children_objs += children_objs_s
                     print('Found ', len(children_objs), 'children objects')
+                    if len(children_objs) == 0:
+                        break
+                        
                     to_scrape = copy.deepcopy(children_objs)
                     scraped_pages += children_objs
 
