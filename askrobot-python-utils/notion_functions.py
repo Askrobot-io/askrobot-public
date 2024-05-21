@@ -214,11 +214,17 @@ def scrape_notion(task_config):
         all_scraped_pages.append( id )
         scraped_page_meta[ id ] = item
 
+    if not task_config['exclude_pages']:
+        task_config['exclude_pages'] = []
+
     for i in range(len(task_config['exclude_pages'])):
         task_config['exclude_pages'][i] = task_config['exclude_pages'][i].replace('-', '')
 
     if not task_config['n_levels']:
-        task_config['n_levels'] = 1000
+        task_config['n_levels'] = 5
+
+    if not task_config['pages']:
+        task_config['pages'] = 'AUTO'
 
     pages = []
     if isinstance( task_config['pages'], list ):
@@ -252,10 +258,9 @@ def scrape_notion(task_config):
                         children = copy.deepcopy(children_new)
                         children_objs_s, children_new = add_children(client, p, task_config['exclude_pages'], children)
                         children_objs += children_objs_s
-                    print('Found ', len(children_objs), 'children objects')
                     if len(children_objs) == 0:
                         break
-                        
+
                     to_scrape = copy.deepcopy(children_objs)
                     scraped_pages += children_objs
 
