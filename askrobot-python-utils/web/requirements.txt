@@ -1,0 +1,4 @@
+playwright
+nest-asyncio
+readability-lxml
+html2text
