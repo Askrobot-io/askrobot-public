@@ -200,6 +200,17 @@ def add_children(client, initial_obj, exclude_pages=[], children_old=[]):
 
 
 def scrape_notion(task_config):
+
+    default_task_config = {
+        'exclude_pages': [],
+        'n_levels': 5,
+        'pages': 'AUTO'
+    }
+    
+    task_config = dict(task_config)
+    task_config = {**default_task_config, **task_config}
+
+
     if task_config['auth']['token']:
         client = Client(auth=task_config['auth']['token'])
     else:
@@ -214,17 +225,8 @@ def scrape_notion(task_config):
         all_scraped_pages.append( id )
         scraped_page_meta[ id ] = item
 
-    if not task_config['exclude_pages']:
-        task_config['exclude_pages'] = []
-
     for i in range(len(task_config['exclude_pages'])):
         task_config['exclude_pages'][i] = task_config['exclude_pages'][i].replace('-', '')
-
-    if not task_config['n_levels']:
-        task_config['n_levels'] = 5
-
-    if not task_config['pages']:
-        task_config['pages'] = 'AUTO'
 
     pages = []
     if isinstance( task_config['pages'], list ):
