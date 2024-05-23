@@ -90,10 +90,13 @@ export class CardComponent implements OnChanges {
           if (message != null && message.id != null && message.created_at >= last_created_at) {
             last_created_at = message.created_at; // HOT FIX: checking that the messages are going sequentially
             this.isLoading = false;
-            this.answer = message.answer;
+            this.answer =
+              ( message.markdown )
+                ? message.markdown.replace(/\\([\.\-])/g, '$1')
+                : message.answer;
+
             if (!message.streaming) {
               this.isStreaming = false;
-              this.answer = message.markdown.replace(/\\\./gi, '.'); // HOT FIX: unescape dot(.) for `marked` module
               this.isStandard = message.is_standard;
               this.showWarning = !message.is_standard;
               this.showSearch = message.has_answer_in_articles;
