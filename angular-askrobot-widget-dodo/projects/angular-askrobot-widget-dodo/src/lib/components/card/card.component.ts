@@ -46,6 +46,7 @@ export class CardComponent implements OnChanges {
     if (this.isExpandable !== undefined) {
       this.expanded = !this.isExpandable;
     }
+    this.scope = SCOPE.STANDARDS;
     this.fetchData();
     this.answer = "";
     this.isStandard = null;
