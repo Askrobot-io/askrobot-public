@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { HttpClient } from '@angular/common/http';
 
@@ -34,15 +34,19 @@ export class CardComponent implements OnChanges {
   showSearchConfirmation = false;
   showRatingBlock = false;
   ratingSuccessBlock = false;
-  hoverRating = 0;
   // form
   ratingSubmitted = false;
+  tempRating = 0;
   rating = 0;
   comment = '';
 
   constructor(private http: HttpClient) { }
 
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges) {
+    if (!changes.question.firstChange && changes.question.currentValue !== changes.question.previousValue) {
+      this.showRatingBlock = true;
+    }
+
     if (this.isExpandable !== undefined) {
       this.expanded = !this.isExpandable;
     }
@@ -91,7 +95,7 @@ export class CardComponent implements OnChanges {
             last_created_at = message.created_at; // HOT FIX: checking that the messages are going sequentially
             this.isLoading = false;
             this.answer =
-              ( message.markdown )
+              (message.markdown)
                 ? message.markdown.replace(/\\([\.\-])/g, '$1')
                 : message.answer;
 
@@ -151,8 +155,6 @@ export class CardComponent implements OnChanges {
           this.ratingSubmitted = true;
           this.showRatingBlock = false;
           this.ratingSuccessBlock = false;
-          this.rating = 0;
-          this.hoverRating = 0;
           this.comment = '';
         },
         (error) => {
@@ -168,20 +170,19 @@ export class CardComponent implements OnChanges {
   ratingCancelClick() {
     this.showRatingBlock = false;
     this.rating = 0;
-    this.hoverRating = 0;
   }
 
-  onStarHover(index: number): void {
-    this.hoverRating = index;
+  onStarHover(index: number) {
+    this.tempRating = index;
   }
 
-  onStarLeave(): void {
-    this.hoverRating = this.rating;
+  onStarLeave() {
+    this.tempRating = this.rating;
   }
 
   onStarClick(index: number): void {
-    this.rating = index;
-    this.hoverRating = index;
+    this.tempRating = index;
+    this.rating = this.tempRating;
   }
 
   getThemeClass() {
