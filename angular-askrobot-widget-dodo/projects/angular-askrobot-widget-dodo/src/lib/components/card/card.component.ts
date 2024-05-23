@@ -39,8 +39,17 @@ export class CardComponent implements OnChanges {
   ratingSubmitted = false;
   rating = 0;
   comment = '';
+  private abortController: AbortController;
 
-  constructor(private http: HttpClient) { }
+  ngOnDestroy() {
+    if (this.abortController) {
+      this.abortController.abort();
+    }
+  }
+
+  constructor(private http: HttpClient) {
+    this.abortController = new AbortController();
+  }
 
   ngOnChanges() {
     if (this.isExpandable !== undefined) {
@@ -56,7 +65,7 @@ export class CardComponent implements OnChanges {
 
   async fetchData() {
     if (!this.token || !this.clientId) return;
-    const ctrl = new AbortController();
+    const { signal } = this.abortController;
     let last_created_at = 0;
     this.isLoading = true;
 
@@ -81,7 +90,7 @@ export class CardComponent implements OnChanges {
         'Authorization': "Bearer " + this.token,
       },
       body: JSON.stringify(body),
-      signal: ctrl.signal,
+      signal: signal,
       onmessage: (ev) => {
         try {
           let message = JSON.parse(ev.data);
@@ -91,7 +100,7 @@ export class CardComponent implements OnChanges {
             last_created_at = message.created_at; // HOT FIX: checking that the messages are going sequentially
             this.isLoading = false;
             this.answer =
-              ( message.markdown )
+              (message.markdown)
                 ? message.markdown.replace(/\\([\.\-])/g, '$1')
                 : message.answer;
 
