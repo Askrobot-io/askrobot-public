@@ -116,10 +116,10 @@
         <div
             *ngFor="let item of [1, 2, 3, 4, 5]; let i = index"
         >
-            <span [ngClass]="{'hide': i > rating}">
+            <span *ngIf="i <= rating">
                 <filled-star-icon [color]="getFilledStarColor()"></filled-star-icon>
             </span>
-            <span [ngClass]="{'hide': i <= rating}">
+            <span *ngIf="i > rating">
                 <star-icon></star-icon>
             </span>
         </div>
@@ -133,18 +133,20 @@
                 <div>
                     Ваша оценка ответа
                 </div>
-                <div class="stars">
+                <div
+                  (mouseleave)="onStarLeave()"
+                  class="stars"
+                  >
                     <button
                         *ngFor="let item of [1, 2, 3, 4, 5]; let i = index"
                         (mouseover)="onStarHover(i)"
-                        (mouseleave)="onStarLeave()"
                         (click)="onStarClick(i)"
                         type="button"
                     >
-                        <span [ngClass]="{'hide': i > hoverRating}">
+                        <span *ngIf="i <= tempRating">
                             <filled-star-icon [color]="getFilledStarColor()"></filled-star-icon>
                         </span>
-                        <span [ngClass]="{'hide': i <= hoverRating}">
+                        <span *ngIf="i > tempRating">
                             <star-icon></star-icon>
                         </span>
                     </button>
