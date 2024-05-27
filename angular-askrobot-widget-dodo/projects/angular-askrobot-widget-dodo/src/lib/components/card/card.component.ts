@@ -97,9 +97,9 @@ export class CardComponent implements OnChanges {
 
             if (!message.streaming) {
               this.isStreaming = false;
-              this.isStandard = message.is_standard;
+              this.isStandard = message.is_standard || null;
               this.showWarning = !message.is_standard;
-              this.showSearch = message.has_answer_in_articles;
+              this.showSearch = false // message.has_answer_in_articles;
             }
           }
 
