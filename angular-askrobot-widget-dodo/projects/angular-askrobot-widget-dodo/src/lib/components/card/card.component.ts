@@ -31,7 +31,6 @@ export class CardComponent implements OnChanges {
   showWarning = false;
 
   expanded = false;
-  showSearchConfirmation = false;
   showRatingBlock = false;
   ratingSuccessBlock = false;
   hoverRating = 0;
@@ -99,7 +98,7 @@ export class CardComponent implements OnChanges {
               this.isStreaming = false;
               this.isStandard = message.is_standard || null;
               this.showWarning = !message.is_standard;
-              this.showSearch = false // message.has_answer_in_articles;
+              this.showSearch = message.has_answer_in_articles;
             }
           }
 
@@ -115,9 +114,6 @@ export class CardComponent implements OnChanges {
     this.expanded = !this.expanded;
   }
 
-  searchConfirmationClick() {
-    this.showSearchConfirmation = true;
-  }
 
   ratingBlockClick() {
     this.showRatingBlock = true;
@@ -125,7 +121,6 @@ export class CardComponent implements OnChanges {
 
   searchClick() {
     this.scope = SCOPE.ARTICLES;
-    this.showSearchConfirmation = false;
     this.isLoading = true;
     this.fetchData();
   }
@@ -159,10 +154,6 @@ export class CardComponent implements OnChanges {
           console.error('Error posting review', error);
         }
       );
-  }
-
-  searchCancelClick() {
-    this.showSearchConfirmation = false;
   }
 
   ratingCancelClick() {
