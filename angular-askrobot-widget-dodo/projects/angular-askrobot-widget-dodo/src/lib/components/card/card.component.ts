@@ -64,6 +64,7 @@ export class CardComponent implements OnChanges {
     this.isStandard = null;
     this.showWarning = false;
     this.showSearch = false;
+    this.showRatingBlock = false;
   }
 
   async fetchData() {
