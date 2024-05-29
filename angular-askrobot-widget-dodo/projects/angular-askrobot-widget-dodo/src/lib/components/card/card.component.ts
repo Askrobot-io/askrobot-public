@@ -31,7 +31,6 @@ export class CardComponent implements OnChanges {
   showWarning = false;
 
   expanded = false;
-  showSearchConfirmation = false;
   showRatingBlock = false;
   ratingSuccessBlock = false;
   // form
@@ -65,6 +64,7 @@ export class CardComponent implements OnChanges {
     this.isStandard = null;
     this.showWarning = false;
     this.showSearch = false;
+    this.showRatingBlock = false;
   }
 
   async fetchData() {
@@ -100,17 +100,21 @@ export class CardComponent implements OnChanges {
           let message = JSON.parse(ev.data);
           this.isStreaming = true;
 
-          if (message != null && message.id != null && message.created_at >= last_created_at) {
+          if (
+            message != null
+            && message.id != null
+            && (message.streaming === false || message.created_at > last_created_at)
+        ) {
             last_created_at = message.created_at; // HOT FIX: checking that the messages are going sequentially
             this.isLoading = false;
             this.answer =
               (message.markdown)
-                ? message.markdown.replace(/\\([\.\-])/g, '$1')
+                ? message.markdown.replace(/\\([\.\-\>])/g, '$1')
                 : message.answer;
 
             if (!message.streaming) {
               this.isStreaming = false;
-              this.isStandard = message.is_standard;
+              this.isStandard = message.is_standard || null;
               this.showWarning = !message.is_standard;
               this.showSearch = message.has_answer_in_articles;
             }
@@ -128,9 +132,6 @@ export class CardComponent implements OnChanges {
     this.expanded = !this.expanded;
   }
 
-  searchConfirmationClick() {
-    this.showSearchConfirmation = true;
-  }
 
   ratingBlockClick() {
     this.showRatingBlock = true;
@@ -138,7 +139,6 @@ export class CardComponent implements OnChanges {
 
   searchClick() {
     this.scope = SCOPE.ARTICLES;
-    this.showSearchConfirmation = false;
     this.isLoading = true;
     this.fetchData();
   }
@@ -170,10 +170,6 @@ export class CardComponent implements OnChanges {
           console.error('Error posting review', error);
         }
       );
-  }
-
-  searchCancelClick() {
-    this.showSearchConfirmation = false;
   }
 
   ratingCancelClick() {

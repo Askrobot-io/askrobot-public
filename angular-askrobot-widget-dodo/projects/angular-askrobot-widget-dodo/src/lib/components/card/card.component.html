@@ -1,5 +1,5 @@
 <div *ngIf="clientId && token" class="askrobot-card" [ngClass]="getThemeClass()">
-    <ng-container *ngIf="!(this.isLoading || this.showSearchConfirmation)">
+    <ng-container *ngIf="!this.isLoading">
         <div class="card-wrapper">
             <askrobot-logo-icon [color]="getLogoColor()"></askrobot-logo-icon>
 
@@ -43,7 +43,7 @@
             *ngIf="expanded && !showRatingBlock && !isStreaming" [theme]="getThemeClass()"
             [mainButtonText]="showSearch ? 'Найти в статьях' : ''"
             [mainButtonIcon]="searchIcon"
-            (mainButtonAction)="searchConfirmationClick()"
+            (mainButtonAction)="searchClick()"
             [secondaryButtonText]="!ratingSubmitted ? 'Оценить ответ' : ''"
             [secondaryButtonIcon]="ratingIcon"
             [secondaryButtonComponent]="ratingSubmitted ? ratingStars : null"
@@ -70,33 +70,6 @@
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
-        </div>
-    </ng-container>
-
-    <ng-container *ngIf="showSearchConfirmation">
-        <div class="card-wrapper">
-            <askrobot-logo-icon [color]="getLogoColor()"></askrobot-logo-icon>
-            <div>
-                <div class="title" [ngClass]="getThemeClass()">
-                    Вы точно хотите поискать ответ в статьях?
-                </div>
-
-                <div class="block">
-                    Информация в статьях не является стандартом Додо!
-                </div>
-
-                <actions
-                    [theme]="getThemeClass()"
-                    [mainButtonText]="'Да, искать в статьях'"
-                    [mainButtonIcon]="searchIcon"
-                    (mainButtonAction)="searchClick()"
-                    [secondaryButtonText]="'Отмена'"
-                    [secondaryButtonStyles]="true"
-                    (secondaryButtonAction)="searchCancelClick()"
-                    [hasBackground]="false"
-                >
-                </actions>
             </div>
         </div>
     </ng-container>
