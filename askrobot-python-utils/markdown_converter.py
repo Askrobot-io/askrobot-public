@@ -12,11 +12,11 @@ def page2markdown(json_data):
 
     # Remove all "span" tags
     for tag in soup.find_all('span'):
-        tag.decompose()
+        tag.unwrap()
 
     # Remove all "br" tags
     for tag in soup.find_all('br'):
-        tag.decompose()
+        tag.unwrap()
 
     cleaned_markdown = str(soup)
 
