@@ -1,19 +1,32 @@
 <div *ngIf="clientId && token" class="askrobot-card" [ngClass]="getThemeClass()">
-    <ng-container *ngIf="!this.isLoading">
+    <ng-container *ngIf="!isLoading">
         <div class="card-wrapper">
             <askrobot-logo-icon [color]="getLogoColor()"></askrobot-logo-icon>
 
             <div>
                 <div class="first-block">
                     <div class="title" [ngClass]="getThemeClass()">
-                        {{question}}
+                        <ng-container *ngIf="isStreaming">
+                            <div class="loader-wrapper-title">
+                                <div class="loader" [ngClass]="getThemeClass()">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        </ng-container>
+
+                        <ng-container *ngIf="!isStreaming">
+                            {{question}}
+                        </ng-container>
                     </div>
+
                     <div
                         *ngIf="isStandard !== null"
                         class="status"
                         [class.is-standard]="isStandard"
                     >
-                        {{isStandard ? "Стандарт" : "Статья"}}
+                        Стандарт
                     </div>
                 </div>
 
@@ -24,7 +37,6 @@
                     <span>
                         Информация не является стандартом Додо
                     </span>
-
                 </div>
 
                 <div
