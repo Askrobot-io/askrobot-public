@@ -52,7 +52,7 @@
             </div>
         </div>
         <actions
-            *ngIf="expanded && !showRatingBlock && !isStreaming" [theme]="getThemeClass()"
+            *ngIf="expanded && !showRatingBlock && hasAnswer" [theme]="getThemeClass()"
             [mainButtonText]="showSearch ? 'Найти в статьях' : ''"
             [mainButtonIcon]="searchIcon"
             (mainButtonAction)="searchClick()"

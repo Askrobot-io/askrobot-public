@@ -26,6 +26,7 @@ export class CardComponent implements OnChanges {
   scope: Scope = SCOPE.STANDARDS;
   isLoading = true;
   isStreaming = true;
+  hasAnswer = false;
   isStandard: boolean | null = null;
   showSearch = false;
   showWarning = false;
@@ -114,6 +115,7 @@ export class CardComponent implements OnChanges {
 
             if (!message.streaming) {
               this.isStreaming = false;
+              this.hasAnswer = true;
               this.isStandard = message.is_standard || null;
               this.showWarning = !message.is_standard;
               this.showSearch = message.has_answer_in_articles;
@@ -188,6 +190,25 @@ export class CardComponent implements OnChanges {
   onStarClick(index: number): void {
     this.tempRating = index;
     this.rating = this.tempRating;
+    const reviewData = {
+      api: true,
+      engine: 'event',
+      client: this.clientId,
+      question: this.question,
+      rating: this.rating + 1,
+    };
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + this.token
+    };
+
+    this.http.post<any>(ASKROBOT_URL, reviewData, { headers })
+      .subscribe(
+        (res) => {},
+        (error) => {
+          console.error('Error posting review', error);
+        }
+      );
   }
 
   getThemeClass() {
