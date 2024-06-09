@@ -8,262 +8,249 @@ import requests
 import copy
 
 from notion_client import Client
+import copy
+
+TYPE_PAGE       = "page"
+TYPE_CHILD_PAGE = "child_page"
+TYPE_DATABASE   = "database"
+TYPE_CALLOUT    = "callout"
+TYPE_LINK_TO_PAGE = "link_to_page"
+
+ALL_ATTACHMENT_TYPES = [
+    TYPE_PAGE,
+    TYPE_CHILD_PAGE,
+    TYPE_CALLOUT,
+    TYPE_LINK_TO_PAGE,
+    TYPE_DATABASE,
+]
 
 
-TYPE_DATABASE = "database"
-TYPE_PAGE = "page"
+#
+# Globals
+#
+client = None
+exclude_page_ids = []
+page_hash = {}
+page_meta_hash = {}
+scrape_counter = 0
 
-def scrape_database(client, database_id):
-    json_descr = client.databases.retrieve(database_id=database_id)
-    json_data = client.databases.query(database_id=database_id)
-
-    json_data = expand_toggle(client, json_data)
-
-    return {
-        'Type': TYPE_DATABASE,
-        'url': 'https://www.notion.so/' + database_id.replace('-', ''),
-        'id': database_id,
-        'Description': json_descr,
-        'Data': json_data
-    }
-
-
-def scrape_page(client, page_id, t=TYPE_PAGE):
-    json_data = client.blocks.children.list(block_id=page_id)
-    json_data = expand_toggle(client, json_data)
-
+def get_page( id, t = TYPE_PAGE ):
     return {
         'Type': t,
-        'url': 'https://www.notion.so/' + page_id.replace('-', ''),
-        'id': page_id,
-        'Data': json_data
+        'url':  f"https://www.notion.so/{id}",
+        'id':   id,
+        'Data': client.blocks.children.list( block_id = id )
     }
 
+def get_database( id ):
+    return {
+        'Type':        TYPE_DATABASE,
+        'url':         f"https://www.notion.so/{id}",
+        'id':          id,
+        'Description': client.databases.retrieve( database_id = id ),
+        'Data':        client.databases.query( database_id = id ),
+    }
 
-def find_key(json_data, target_key, path=None, target_value=None):
-    if path is None:
-        path = []
+def get_id( raw_id ):
+    return raw_id.replace('-', '')
 
-    if isinstance(json_data, dict):
-        for key, value in json_data.items():
-            if target_value:
-                cond = (key == target_key) and (value == target_value)
-            else:
-                cond = (key == target_key)
-            if cond:
-                yield path + [key]
-            else:
-                yield from find_key(value, target_key, path + [key], target_value)
-    elif isinstance(json_data, list):
-        for index, item in enumerate(json_data):
-            yield from find_key(item, target_key, path + [index], target_value)
+def get_title( meta ):
+    if (
+        'properties' in meta
+        and 'Name' in meta['properties']
+        and 'type' in meta['properties']['Name']
+        and meta['properties']['Name']['type'] == "title"
+        and 'title' in meta['properties']['Name']
+        and meta['properties']['Name']['title'] != None
+        and len( meta['properties']['Name']['title'] ) > 0
+        and meta['properties']['Name']['title'][0] != None
+        and 'plain_text' in meta['properties']['Name']['title'][0]
+        and meta['properties']['Name']['title'][0]['plain_text'] != None
+        and len( meta['properties']['Name']['title'][0]['plain_text'].strip() ) > 0
+    ):
+        return meta['properties']['Name']['title'][0]['plain_text'].strip()
 
+    elif (
+        'properties' in meta
+        and 'title' in meta['properties']
+        and meta['properties']['title']['type'] == "title"
+        and 'title' in meta['properties']['title']
+        and len( meta['properties']['title']['title'] ) > 0
+        and 'plain_text' in meta['properties']['title']['title'][0]
+        and meta['properties']['title']['title'][0]['plain_text'] != None
+        and len( meta['properties']['title']['title'][0]['plain_text'].strip() ) > 0
+    ):
+        return meta['properties']['title']['title'][0]['plain_text'].strip()
 
-def expand_toggle(client, initial_obj):
+    return ""
 
-    paths = []
-    children = []
+def is_expandable_block( block ):
+    t = block['type'] if 'type' in block else None
+    return (
+        t != None
+        and (
+            t in [ TYPE_LINK_TO_PAGE ]
+            or
+            'has_children' in block and block['has_children']
+            and ( 'in_trash' not in block or not block['in_trash'] )
+        )
+    )
 
-    for k in find_key(initial_obj, 'toggle'):
-        paths.append(k)
+def get_expandable_blocks_recursive( block ):
+    if isinstance( block, dict ):
+        if is_expandable_block( block ):
+            yield block
 
-    for p in paths:
+        for key in block:
+            yield from get_expandable_blocks_recursive( block[ key ] )
 
-        obj = initial_obj[p[0]]
+    elif isinstance( block, list ):
+        for item in block:
+            yield from get_expandable_blocks_recursive( item )
 
-        for p1 in p[1:-1]:
-            obj = obj[p1]
+def get_extended_block_recursive( block ):
+    global page_hash
+    global page_meta_hash
+    if isinstance( block, dict ):
+        id = get_id( block['id'] ) if 'id' in block else None
 
-        children.append({'Type': 'toggle', 'id': obj['id'], 'path': p})
+        if (
+            id != None
+            and is_expandable_block( block )
+            and block['type'] not in [ TYPE_CHILD_PAGE, TYPE_CALLOUT, TYPE_LINK_TO_PAGE ]
+        ):
+            original_block = copy.deepcopy( block )
+            if id in page_hash:
+                block.update( copy.deepcopy( page_hash[ id ] ) )
 
-    paths = []
+            # Expand block
+            if 'Type' in block:
+                t = block['Type']
+                del block['Type']
 
-    for k in find_key(initial_obj, 'table'):
-        paths.append(k)
+                block['type'] = t
+                if 'Data' in block:
+                    block[ t ] = block['Data']
+                    del block['Data']
 
-    for p in paths:
+                    original_block['has_children'] = False
+                    if 'results' not in block[ t ]:
+                        block[ t ]['results'] = []
 
-        obj = initial_obj[p[0]]
+                    block[ t ]['results'].insert( 0, original_block ) # add first
 
-        for p1 in p[1:-1]:
-            obj = obj[p1]
+        # Expand children
+        new_block = {}
+        for key in block:
+            new_block[ key ] = get_extended_block_recursive( block[ key ] )
+        block.update( copy.deepcopy( new_block ) ) # replace
 
-        children.append({'Type': 'table', 'id': obj['id'], 'path': p})
+        # Add meta
+        if (
+            id != None
+            and id in page_meta_hash
+        ):
+            page_meta = page_meta_hash[ id ]
+            for key in ['public_url', 'url']:
+                if key in page_meta:
+                    block['url'] = page_meta[ key ]
+                    break
 
-    for k in find_key(initial_obj, 'column_list'):
-        paths.append(k)
+    elif isinstance( block, list ):
+        new_block = []
+        for item in block:
+            new_block.append( get_extended_block_recursive( item ) )
+        block = copy.deepcopy( new_block ) # replace
 
-    for p in paths:
+    return block
 
-        obj = initial_obj[p[0]]
+def scrape_notion( task_config ):
+    global client
+    global exclude_page_ids
+    global page_hash
+    global page_meta_hash
+    global scrape_counter
 
-        for p1 in p[1:-1]:
-            obj = obj[p1]
-
-        children.append({'Type': 'column_list', 'id': obj['id'], 'path': p})
-
-    for k in find_key(initial_obj, 'column'):
-        paths.append(k)
-
-    for p in paths:
-
-        obj = initial_obj[p[0]]
-
-        for p1 in p[1:-1]:
-            obj = obj[p1]
-
-        children.append({'Type': 'column', 'id': obj['id'], 'path': p})
-
-    #     print(children)
-
-    for c in children:
-
-        child_obj = scrape_page(client, c['id'], t=c['Type'])
-        current_level = initial_obj
-        for key in c['path'][:-1]:
-            current_level = current_level[key]
-        current_level[c['path'][-1]] = [current_level[c['path'][-1]], child_obj]
-
-    return initial_obj
-
-
-def find_children_ids(json):
-    children = []
-
-    paths = []
-
-    for k in find_key(json, 'child_page'):
-        paths.append(k)
-
-    for p in paths:
-
-        obj = json[p[0]]
-
-        for p1 in p[1:-1]:
-            obj = obj[p1]
-
-        children.append({'Type': TYPE_PAGE, 'id': obj['id'], 'path': p})
-
-    for k in find_key(json, 'object', target_value=TYPE_PAGE):
-        paths.append(k)
-
-    for p in paths:
-
-        obj = json[p[0]]
-
-        for p1 in p[1:-1]:
-            obj = obj[p1]
-
-        children.append({'Type': TYPE_PAGE, 'id': obj['id'], 'path': p})
-
-    paths = []
-
-    for k in find_key(json, 'child_database'):
-        paths.append(k)
-
-    for p in paths:
-
-        obj = json[p[0]]
-
-        for p1 in p[1:-1]:
-            obj = obj[p1]
-
-        children.append({'Type': TYPE_DATABASE, 'id': obj['id'], 'path': p})
-
-    return children
-
-
-def add_children(client, initial_obj, exclude_pages=[], children_old=[]):
-    children_new = find_children_ids(initial_obj)
-
-    children_add = [c for c in children_new if not c in children_old]
-
-    print(len(children_add), ' new potential children')
-
-    children_objs = []
-
-    for c in children_add:
-
-        if not c['id'] in exclude_pages:
-
-            if c['Type'] == TYPE_DATABASE:
-                try:
-                    child_obj = scrape_database(client, c['id'])
-                except:
-                    child_obj = scrape_page(client, c['id'])
-            else:
-                child_obj = scrape_page(client, c['id'], t=c['Type'])
-
-            children_objs.append(child_obj)
-
-    return children_objs, children_new
-
-
-def scrape_notion(task_config):
+    # Reset
+    client = None
+    exclude_page_ids = []
+    page_hash = {}
+    page_meta_hash = {}
+    scrape_counter = 0
 
     default_task_config = {
         'exclude_pages': [],
-        'n_levels': 5,
         'pages': 'AUTO'
     }
-    
-    task_config = dict(task_config)
-    task_config = {**default_task_config, **task_config}
 
+    task_config = dict( task_config )
+    task_config = { **default_task_config, **task_config }
 
     if task_config['auth']['token']:
-        client = Client(auth=task_config['auth']['token'])
+        client = Client( auth = task_config['auth']['token'] )
+
     else:
         raise NotImplementedError
 
-    scraped_pages = []
-    scraped_page_meta = {}
-
-    all_scraped_pages = []
     for item in client.search()['results']:
-        id = item['id'].replace('-', '')
-        all_scraped_pages.append( id )
-        scraped_page_meta[ id ] = item
+        page_meta_hash[ get_id( item['id'] ) ] = item
 
-    for i in range(len(task_config['exclude_pages'])):
-        task_config['exclude_pages'][i] = task_config['exclude_pages'][i].replace('-', '')
+    exclude_page_ids = [ get_id( id ) for id in task_config['exclude_pages'] ]
+
+    page_ids = []
+    if isinstance( task_config['pages'], str ) and task_config['pages'] == 'AUTO':
+        page_ids = list( page_meta_hash.keys() )
+
+    elif isinstance( task_config['pages'], list ):
+        page_ids = [ get_id( id ) for id in task_config['pages'] ]
+        page_ids = [ id for id in page_ids if id in page_meta_hash ]
 
     pages = []
-    if isinstance( task_config['pages'], list ):
-        pages = [ id for id in task_config['pages'] if id in all_scraped_pages ]
+    page_ids = [ ( id, page_meta_hash[ id ]['object'] ) for id in page_ids ]
+    for page, t in scrape_pages_recursive( page_ids ):
+        if t in ALL_ATTACHMENT_TYPES:
+            pages.append( page )
 
-    elif isinstance( task_config['pages'], str ) and task_config['pages'] == 'AUTO':
-        pages = all_scraped_pages
+    extended_pages = [ get_extended_block_recursive( p ) for p in pages ]
+    return extended_pages, page_meta_hash
 
-    for i1, obj_id in enumerate( pages ):
-        print('Scraping page', i1)
+def scrape_pages_recursive( page_ids, indent = 0 ):
+    global exclude_page_ids
+    global page_hash
+    global scrape_counter
+    global cache_hash
 
-        if not obj_id.replace('-', '') in task_config['exclude_pages']:
+    for id, t in page_ids:
+        if id in exclude_page_ids:
+            continue
 
+        exclude_page_ids.append( id ) # exclude from scraping
+
+        if id not in cache_hash:
             try:
-                obj = scrape_database(client, obj_id)
-            except:
-                obj = scrape_page(client, obj_id)
+                page = get_database( id ) if t == TYPE_DATABASE else get_page( id, t )
 
-            scraped_pages.append(obj)
+            except Exception as e:
+                print( scrape_counter, "  " * indent, "[x]", e )
+                continue
 
-            children = []
-            children_new = [1]
+            cache_hash[ id ] = ( page, t )
 
-            to_scrape = [obj]
+        page, t = copy.deepcopy( cache_hash[ id ] )
+        if t != TYPE_DATABASE:
+            page_hash[ id ] = page
 
-            for i in range(task_config['n_levels']):
-                if len(children_new) != len(children):
-                    print('Scraping level ', i + 1)
-                    children_objs = []
-                    for p in to_scrape:
-                        children = copy.deepcopy(children_new)
-                        children_objs_s, children_new = add_children(client, p, task_config['exclude_pages'], children)
-                        children_objs += children_objs_s
-                    if len(children_objs) == 0:
-                        break
+        # Log
+        scrape_counter += 1
+        name = f"[{t}: {id}]"
+        if id in page_meta_hash:
+            name = get_title( page_meta_hash[ id ] ) + " " + name
+        print( scrape_counter, "  " * indent, name )
 
-                    to_scrape = copy.deepcopy(children_objs)
-                    scraped_pages += children_objs
+        yield page, t
 
-    return scraped_pages, scraped_page_meta
+        sub_page_ids = []
+        for b in get_expandable_blocks_recursive( page ):
+            sub_page_ids.append( ( get_id( b['id'] ), b['type'] ) )
+
+        yield from scrape_pages_recursive( sub_page_ids, indent + 1 )

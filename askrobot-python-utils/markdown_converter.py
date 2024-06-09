@@ -1,54 +1,35 @@
-from bs4 import BeautifulSoup
+import re
 import notion2md
+from tabulate import tabulate
+from bs4 import BeautifulSoup
 from notion2md.convertor.block import BlockConvertor
 
 
-def page2markdown(json_data):
-    n2md = MyBlockConvertor(config={}, client=None)
+def page2markdown( page ):
+    n2md = MyBlockConvertor( config={}, client = None )
 
-    md = n2md.convert(blocks=json_data['Data']['results'])
+    md = n2md.convert( blocks = page['Data']['results'] )
 
     soup = BeautifulSoup(md, 'html.parser')
+    for tag_name in ['span', 'u', 'br']:
+        for tag in soup.find_all( tag_name ):
+            tag.unwrap()
+    cleaned_markdown = str( soup )
 
-    # Remove all "span" tags
-    for tag in soup.find_all('span'):
-        tag.unwrap()
+    cleaned_markdown = cleaned_markdown.replace('&amp;', '&')
+    return re.sub( r"\n{3,}", "\n\n", cleaned_markdown )
 
-    # Remove all "br" tags
-    for tag in soup.find_all('br'):
-        tag.unwrap()
-
-    cleaned_markdown = str(soup)
-
-    return cleaned_markdown
-
-
-def process_child_page(block):
-    url = 'https://www.notion.so/' + block['id'].replace('-', '')
-    if block['child_page']['title'] == '':
-        block['child_page']['title'] = 'Untitled'
-    md_text = '[' + block['child_page']['title'] + '](' + url + ')'
-
-    return '\n' + md_text + '\n\n'
-
-def process_child_database(block):
-    url = 'https://www.notion.so/' + block['id'].replace('-', '')
-    if block['child_database']['title'] == '':
-        block['child_database']['title'] = 'Untitled'
-    md_text = '[' + block['child_database']['title'] + '](' + url + ')'
-
-    return '\n' + md_text + '\n'
-
-def my_text_link(item: dict):
+def my_text_link( block ):
     """
-    input: item:dict ={"content":str,"link":str}
+    input: block : dict = {"content": str, "link": str}
     """
-    if item['link']['url'].count('/') < 2:
-        link = 'https://www.notion.so'+item['link']['url']
-    else:
-        link = item['link']['url']
 
-    return f"[{item['content']}]({link})"
+    title = block['content'].strip()
+    link = block['link']['url'].strip()
+    url = f"https://www.notion.so{link}" if link.count('/') < 2 else link
+    if url != "" and title != "":
+        return f"[{title}]({url})"
+    return ""
 
 notion2md.convertor.richtext.text_link = my_text_link
 
@@ -72,93 +53,168 @@ BLOCK_TYPES = {
     "divider": notion2md.convertor.block.divider,
     "file": notion2md.convertor.block.file,
     "table_row": notion2md.convertor.block.table_row,
-    "synced_block": notion2md.convertor.block.synced_block,
+    # "synced_block": notion2md.convertor.block.synced_block,
 }
 
 
-class MyBlockConvertor(BlockConvertor):
+class MyBlockConvertor( BlockConvertor ):
+    def __init__( self, config, client, io = None ):
+        self._continued_numbered_list_hash = {}
+        self._numbered_list_number_hash = {}
+        super().__init__( config, client, io )
 
-    def convert_block(self, block: dict, depth=0) -> str:
-        outcome_block: str = ""
-        block_type = block["type"]
-        if block_type == "toggle":
-            try:
-                outcome_block = (
-                        "▼" + BLOCK_TYPES["paragraph"](
-                    self.collect_info(block[block_type][0])
-                )
-                        + "\n\n" + self.convert(block[block_type][1]['Data']['results']) + '\n')
-                return outcome_block
-            except:
-                print(block)
-        elif block_type == 'column_list':
-            outcome_block = ''
-            for b in block[block_type][1]['Data']['results']:
-                b1 = b['column'][1]['Data']['results']
-                outcome_block += self.convert(b1) + '\n\n'
+    def convert_block( self, block: dict, depth = 0 ) -> str:
+        outcome_block = ""
+        block_type = block["type"] if 'type' in block else None
+        if block_type == None:
             return outcome_block
-        elif block_type == 'child_database':
-            return process_child_database(block)
-        elif block_type == 'child_page':
-            return process_child_page(block)
-        elif block_type == "table":
-            try:
-                outcome_block = '\n' + self.create_table(cell_blocks=block[block_type][1]['Data']['results']) + '\n'
-                return outcome_block
-            except:
-                print(block)
-        elif block_type == "numbered_list_item":
-            if self._continued_numbered_list:
-                self._numbered_list_number += 1
-            else:
-                self._continued_numbered_list = True
-                self._numbered_list_number = 1
-        else:
-            self._continued_numbered_list = False
-        # Special Case: Block is blank
-        if (
-                block_type == "paragraph"
-                and not block["has_children"]
-                and not block[block_type]["rich_text"]
-        ):
-            return notion2md.convertor.block.blank() + "\n\n"
-        # Normal Case
+
         try:
-            if block_type in BLOCK_TYPES:
-                outcome_block = (
-                        BLOCK_TYPES[block_type](
-                            self.collect_info(block[block_type])
-                        )
-                        + "\n\n"
-                )
+            # [Testing env]
+            # outcome_block += f"[{block_type}]\n"
+            # outcome_block += f"{block = }\n"
+
+            if block_type == 'toggle':
+                outcome_block += "▼ "
+
+            if block_type == 'numbered_list_item':
+                if self._continued_numbered_list:
+                    self._numbered_list_number += 1
+
+                else:
+                    self._continued_numbered_list = True
+                    self._numbered_list_number = 1
+
             else:
-                outcome_block = f"[//]: # ({block_type} is not supported)\n\n"
-            # Convert child block
+                self._continued_numbered_list = False
+
+            if block_type in ['child_page', 'child_database', 'link_to_page']:
+                url = f"https://www.notion.so/{block['id']}"
+                if (
+                    'url' in block
+                    and block['url'] != None
+                    and block['url'].strip() != ""
+                ):
+                    url = block['url'].strip()
+
+                title = ""
+                if (
+                    block_type in block
+                    and 'title' in block[ block_type ]
+                    and block[ block_type ]['title'] != None
+                    and block[ block_type ]['title'].strip() != ""
+                ):
+                    title = block[ block_type ]['title'].strip()
+
+                if url != "":
+                    if title != "":
+                        outcome_block += f"[{title}]({url})"
+
+                    else:
+                        outcome_block += url
+
+            elif block_type in ['table']:
+                outcome_block = '\n' + self.create_table( cell_blocks = block[ block_type ]['results'] ) + '\n'
+
+            elif 'url' in block and block['url'] != None:
+                if (
+                    block_type in block
+                    and block[ block_type ] != None
+                    and 'results' in block[ block_type ]
+                    and len( block[ block_type ]['results'] ) > 0
+                ):
+                    for b in block[ block_type ]['results']:
+                        outcome_block += self.convert_block( b, depth + 1 ) + '\n\n'
+
+            elif (
+                block_type in block
+                and (
+                    len( block[ block_type ] ) == 0
+                    or
+                    block_type == 'synced_block'
+                    and len( block['synced_block'] ) == 1
+                    and 'synced_from' in block['synced_block']
+                    and block['synced_block']['synced_from'] == None
+                )
+            ):
+                # skip empty blocks
+                pass
+
+            elif block_type in ['image', 'video', 'file']:
+                url = block[ block_type ][ block[ block_type ]['type'] ]['url'].strip()
+
+                title = ""
+                if (
+                    block_type in block
+                    and 'caption' in block[ block_type ]
+                    and len( block[ block_type ]['caption'] ) > 0
+                    and 'plain_text' in block[ block_type ]['caption'][0]
+                    and block[ block_type ]['caption'][0]['plain_text'] != None
+                    and block[ block_type ]['caption'][0]['plain_text'].strip() != ""
+                ):
+                    title = block[ block_type ]['caption'][0]['plain_text'].strip()
+
+                elif (
+                    block_type in block
+                    and 'name' in block[ block_type ]
+                    and block[ block_type ]['name'] != None
+                    and block[ block_type ]['name'].strip() != ""
+                ):
+                    title = block[ block_type ]['name'].strip()
+
+                if url != "" and title != "":
+                    outcome_block += f"![{title}]({url})"
+
+                else:
+                    outcome_block += url
+
+            elif block_type == 'synced_block': # if there is only a link
+                block_id = block['id']
+                if (
+                    'synced_block' in block
+                    and block['synced_block'] != None
+                    and 'synced_from' in block['synced_block']
+                    and block['synced_block']['synced_from'] != None
+                    and 'type' in block['synced_block']['synced_from']
+                    and block['synced_block']['synced_from']['type'] == "block_id"
+                    and 'block_id' in block['synced_block']['synced_from']
+                    and block['synced_block']['synced_from']['block_id'] != None
+                ):
+                    block_id = block['synced_block']['synced_from']['block_id']
+
+                url = f"https://www.notion.so/{block_id}"
+                outcome_block += url
+
+            elif block_type in ['table_of_contents']:
+                pass
+
+            elif block_type in BLOCK_TYPES:
+                outcome_block = (
+                    BLOCK_TYPES[ block_type ](
+                        self.collect_info( block[ block_type ] )
+                    )
+                    + "\n\n"
+                )
+
+            else:
+                outcome_block += f"{block = }\n"
+                outcome_block += f"[//]: # ({block_type} is not supported)\n\n"
 
         except Exception as e:
-            if self._io:
-                self._io.write_line(
-                    error(f"{e}: Error occured block_type:{block_type}")
-                )
+            print( "[x]", block_type, e )
+            pprint( block )
+
         return outcome_block
 
-    def create_table(self, cell_blocks: dict):
+    def create_table( self, cell_blocks ):
         table_list = []
         for cell_block in cell_blocks:
             cell_block_type = cell_block["type"]
-            table_list.append(
-                BLOCK_TYPES[cell_block_type](
-                    self.collect_info(cell_block[cell_block_type])
+            if cell_block_type in ['table_row']:
+                table_list.append(
+                    BLOCK_TYPES[ cell_block_type ](
+                        self.collect_info( cell_block[ cell_block_type ] )
+                    )
                 )
-            )
-        # convert to markdown table
-        for index, value in enumerate(table_list):
-            if index == 0:
-                table = (" | " + " | ".join(value) + " | ").replace('\n', '') + "\n"
-                table += (
-                        " | " + " | ".join(["----"] * len(value)) + " | " + "\n"
-                )
-                continue
-            table += (" | " + " | ".join(value) + " | ").replace('\n', '') + "\n"
-        table += "\n"
-        return table
+
+        return tabulate( table_list, [], tablefmt = "grid" )
