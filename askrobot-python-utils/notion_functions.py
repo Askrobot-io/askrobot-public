@@ -33,6 +33,7 @@ exclude_page_ids = []
 page_hash = {}
 page_meta_hash = {}
 scrape_counter = 0
+cache_hash = {}
 
 def get_page( id, t = TYPE_PAGE ):
     return {
