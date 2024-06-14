@@ -39,6 +39,7 @@ export class CardComponent implements OnChanges {
   tempRating = 0;
   rating = 0;
   comment = '';
+  retry = 0;
   private abortController: AbortController;
 
   ngOnDestroy() {
@@ -68,11 +69,13 @@ export class CardComponent implements OnChanges {
     this.showRatingBlock = false;
   }
 
-  async fetchData() {
+  async fetchData(updateLoading = true) {
     if (!this.token || !this.clientId) return;
     const { signal } = this.abortController;
     let last_created_at = 0;
-    this.isLoading = true;
+    if (updateLoading) {
+        this.isLoading = true;
+    }
 
     const body: Record<string, any> = {
       question: this.question,
@@ -119,6 +122,7 @@ export class CardComponent implements OnChanges {
               this.isStandard = message.is_standard || null;
               this.showWarning = !message.is_standard;
               this.showSearch = message.has_answer_in_articles;
+              this.retry = 0;
             }
           }
 
@@ -126,14 +130,23 @@ export class CardComponent implements OnChanges {
           this.isLoading = false;
           console.error("Error receiving messages", error);
         }
+      },
+      onclose: () => {
+        if (this.isStreaming) {
+          if (this.retry < 3) {
+              this.retry++;
+              this.ngOnDestroy();
+              setTimeout(() => this.fetchData(false), 50);
+          }
+        }
       }
     });
   }
 
   toggleExpand() {
     this.expanded = !this.expanded;
+    this.showRatingBlock = !this.showSearch;
   }
-
 
   ratingBlockClick() {
     this.showRatingBlock = true;
