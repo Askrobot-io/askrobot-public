@@ -24,7 +24,8 @@ def replace_special_chars( text ):
 # HTML & Markdown
 #
 def has_meaningful_image_dimenstion( value ):
-    return int( re.sub( '\D+', '', value.split('.')[0] ) ) > 10
+    maybe_int = re.sub( '\D+', '', value.split('.')[0] )
+    return int(maybe_int) > 10 if maybe_int.isdigit() else False
 
 def html_to_pages( response_content, minimal_number_of_words = 8 ):
     if response_content == None or len( response_content ) == 0:
