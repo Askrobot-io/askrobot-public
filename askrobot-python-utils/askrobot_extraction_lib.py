@@ -27,9 +27,14 @@ def has_meaningful_image_dimenstion( value ):
     maybe_int = re.sub( '\D+', '', value.split('.')[0] )
     return int(maybe_int) > 10 if maybe_int.isdigit() else False
 
-def html_to_pages( response_content, minimal_number_of_words = 8 ):
+def html_to_pages( response_content, minimal_number_of_words = 8, custom_content_handlers = {} ):
     if response_content == None or len( response_content ) == 0:
         return []
+
+    content_handlers = {
+        "table": lambda rows, header: tabulate( rows, header, tablefmt = "grid" ),
+        **custom_content_handlers   
+    }
 
     h2t = html2text.HTML2Text( bodywidth = 0 )
     h2t.bypass_tables = True # Replace table manually
@@ -122,7 +127,7 @@ def html_to_pages( response_content, minimal_number_of_words = 8 ):
             rows.append([ cell.get_text( strip = True ) for cell in row.find_all(['td', 'th']) ])
 
         # Convert the table to Markdown
-        markdown_table = tabulate( rows, header, tablefmt = "grid" )
+        markdown_table = content_handlers["table"]( rows, header )
 
         table_tag.replace_with( markdown_table )
 
