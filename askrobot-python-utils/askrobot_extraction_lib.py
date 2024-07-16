@@ -98,7 +98,7 @@ def html_table_to_md(soupTable, list_lo_md_handler):
     transpose = lambda x: list( map(list, zip(*x)) )
 
     headers = transpose( headers )
-    datas = transpose( datas )
+    # datas = transpose( datas )
 
     return list_lo_md_handler( datas, headers )
 
