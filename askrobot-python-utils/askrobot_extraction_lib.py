@@ -42,7 +42,7 @@ def html_table_to_md(soupTable, list_lo_md_handler):
         rowspan = cell_node.get('rowspan', 1)
         rowspan = safe_str_to_int( rowspan, 1 )
         
-        cell_text = cell_node.get_text()
+        cell_text = cell_node.get_text( strip = True )
         
         # fill cells
         for rn in range( row_num, row_num + rowspan ):
