@@ -23,9 +23,85 @@ def replace_special_chars( text ):
 #
 # HTML & Markdown
 #
+
+def safe_str_to_int(value, defalut = 0):
+    maybe_int = re.sub( '\D+', '', str(value).split('.')[0] )
+    return int(maybe_int) if maybe_int.isdigit() else defalut
+
 def has_meaningful_image_dimenstion( value ):
-    maybe_int = re.sub( '\D+', '', value.split('.')[0] )
-    return int(maybe_int) > 10 if maybe_int.isdigit() else False
+    return safe_str_to_int( value ) > 10
+
+def html_table_to_md(soupTable, list_lo_md_handler):
+
+    def insert_table_node( table_map: dict, row_num: int, column_num: int, cell_node ):
+        max_row = 0
+        max_column = 0
+        colspan = cell_node.get('colspan', 1)
+        colspan = safe_str_to_int( colspan, 1 )
+        
+        rowspan = cell_node.get('rowspan', 1)
+        rowspan = safe_str_to_int( rowspan, 1 )
+        
+        cell_text = cell_node.get_text()
+        
+        # fill cells
+        for rn in range( row_num, row_num + rowspan ):
+            for cn in range( column_num, column_num + colspan ):
+                while ( rn, cn ) in table_map:
+                    cn  += 1
+                
+                table_map[ ( rn, cn ) ] = cell_text
+                max_row = max( max_row, rn )   
+                max_column = max( max_column, cn )
+        return ( max_row, max_column )
+    
+    header_map = {}
+    data_map = {}
+
+    max_header_row = 0
+    min_data_row = 10000000000000    
+    max_data_row = 0    
+    max_header_column = 0
+    max_data_column = 0
+
+    rows = soupTable.find_all( 'tr' )
+    for row_num, row in enumerate( rows ):
+        columns = row.find_all( 'th' )
+        for column_num, cell_node in enumerate( columns ):
+            (cur_header_row, cur_header_column) = insert_table_node( header_map, row_num, column_num, cell_node )
+            max_header_row = max( max_header_row, cur_header_row )
+            max_header_column = max( max_header_column, cur_header_column )
+        
+        columns = row.find_all( 'td' )
+        for column_num, cell_node in enumerate( columns ):
+            min_data_row = min( min_data_row, row_num )
+            (cur_data_row, cur_data_column) = insert_table_node( data_map, row_num, column_num, cell_node )
+            max_data_row = max( max_data_row, cur_data_row )
+            max_data_column = max( max_data_column, cur_data_column )
+
+    # assemble list
+    headers = []
+    datas = []
+
+    for row in range( max_header_row + 1 ):
+        header_row = []
+        for column in range( max_header_column + 1 ):
+            header_row.append( header_map.get( ( row, column ), '' ) )
+        headers.append( header_row )
+
+    for row in range( min_data_row, max_data_row + 1 ):
+        data_row = []
+        for column in range( max_data_column + 1 ):
+            data_row.append( data_map.get( ( row, column ), '' ) )
+        datas.append( data_row )
+
+    transpose = lambda x: list( map(list, zip(*x)) )
+
+    headers = transpose( headers )
+    datas = transpose( datas )
+
+    return list_lo_md_handler( datas, headers )
+
 
 def html_to_pages( response_content, minimal_number_of_words = 8, custom_content_handlers = {} ):
     if response_content == None or len( response_content ) == 0:
@@ -112,25 +188,11 @@ def html_to_pages( response_content, minimal_number_of_words = 8, custom_content
     soup = BeautifulSoup( page_content, 'html.parser' )
     table_tags = soup.select('table')
     for table_tag in table_tags:
-        header_rows = 0
-        for row in table_tag.find_all('tr'):
-            if len( row.find_all('td') ) > 0:
-                break
-
-            header_rows += 1
-
-        # Extract table header
-        header = []
-        for row in table_tag.find_all('tr')[ 0 : header_rows ]:
-            header.append([ cell.get_text( strip = True ) for cell in row.find_all('th') ])
-
-        # Extract table rows
-        rows = []
-        for row in table_tag.find_all('tr')[ header_rows : ]:
-            rows.append([ cell.get_text( strip = True ) for cell in row.find_all(['td', 'th']) ])
+        
+        html_table_to_md( table_tag, content_handlers["table"] )
 
         # Convert the table to Markdown
-        markdown_table = content_handlers["table"]( rows, header )
+        markdown_table = html_table_to_md( table_tag, content_handlers["table"] )
 
         table_tag.replace_with( markdown_table )
 

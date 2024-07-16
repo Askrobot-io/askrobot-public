@@ -134,7 +134,11 @@ def table_to_list_values(rows, header):
     for col_cells in columns_values: # transform to [ ["v1 v11", [1], "v2 v22", [4]], ["v1 v11", [2], "v2 v22", [5]], ["v1 v11", [3], "v2 v22", [6] ]
         for cel_num in range( len( col_cells ) ):
             cell_as_list = md_list_to_values_list( col_cells[ cel_num ] )
-            col_cells[ cel_num ] = [ rows_lables_strings[ cel_num ], cell_as_list ]
+            if cel_num < len( rows_lables_strings ):
+                col_cells[ cel_num ] = [ rows_lables_strings[ cel_num ], cell_as_list ]
+            else:
+                col_cells[ cel_num ] = [ cell_as_list ]
+    
 
     whole_list = []
     for col_cells, col_header in zip( columns_values, flatten_header ):
