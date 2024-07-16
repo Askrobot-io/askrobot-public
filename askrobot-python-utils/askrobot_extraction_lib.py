@@ -188,8 +188,6 @@ def html_to_pages( response_content, minimal_number_of_words = 8, custom_content
     soup = BeautifulSoup( page_content, 'html.parser' )
     table_tags = soup.select('table')
     for table_tag in table_tags:
-        
-        html_table_to_md( table_tag, content_handlers["table"] )
 
         # Convert the table to Markdown
         markdown_table = html_table_to_md( table_tag, content_handlers["table"] )
