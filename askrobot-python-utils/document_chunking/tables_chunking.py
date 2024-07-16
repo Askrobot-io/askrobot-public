@@ -5,7 +5,7 @@ import tiktoken
 from tabulate import tabulate
 enc = tiktoken.get_encoding("cl100k_base")
 
-from md_list import md_list_to_values_list, values_list_to_md_list
+from document_chunking.md_list import md_list_to_values_list, values_list_to_md_list
 
 def table_split(rows, header, max_tokens = MAX_TOKENS_PER_CHUNK):
     
