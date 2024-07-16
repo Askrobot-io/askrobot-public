@@ -33,6 +33,9 @@ def html_to_pages( response_content, minimal_number_of_words = 8, custom_content
 
     content_handlers = {
         "table": lambda rows, header: tabulate( rows, header, tablefmt = "grid" ),
+        # other variants:
+        # "table": lambda rows, header: table_split( rows, header ),
+        # "table": lambda rows, header: table_to_list_md( rows, header ),
         **custom_content_handlers   
     }
 
