@@ -24,6 +24,26 @@ def replace_special_chars( text ):
 # HTML & Markdown
 #
 
+class CustomHTML2Text(html2text.HTML2Text):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bypass_tables = True
+
+    def handle_starttag(self, tag, attrs):
+        if self.bypass_tables and tag in ("table", "tr", "th", "td"):
+            attrs_str = " ".join(f'{name}="{value}"' for name, value in attrs)
+            self.o(f"<{tag} {attrs_str}>", 1)
+        else:
+            super().handle_starttag(tag, attrs)
+
+    def handle_endtag(self, tag):
+        if self.bypass_tables and tag in ("table", "tr", "th", "td"):
+            self.o(f"</{tag}>", 1)
+        else:
+            super().handle_endtag(tag)
+
+
+
 def safe_str_to_int(value, defalut = 0):
     maybe_int = re.sub( '\D+', '', str(value).split('.')[0] )
     return int(maybe_int) if maybe_int.isdigit() else defalut
@@ -115,7 +135,7 @@ def html_to_pages( response_content, minimal_number_of_words = 8, custom_content
         **custom_content_handlers   
     }
 
-    h2t = html2text.HTML2Text( bodywidth = 0 )
+    h2t = CustomHTML2Text( bodywidth = 0 )
     h2t.bypass_tables = True # Replace table manually
 
     # fix `**W ord**` bug, `__W ord__` bug
