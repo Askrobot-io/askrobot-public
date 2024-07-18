@@ -128,10 +128,10 @@ def html_to_pages( response_content, minimal_number_of_words = 8, custom_content
         return []
 
     content_handlers = {
-        "table": lambda rows, header: tabulate( rows, header, tablefmt = "grid" ),
+        "table": lambda rows, header: "\n" + tabulate( rows, header, tablefmt = "grid" ) + "\n",
         # other variants:
-        # "table": lambda rows, header: table_split( rows, header ),
-        # "table": lambda rows, header: table_to_list_md( rows, header ),
+        # "table": lambda rows, header: "\n" + table_split( rows, header ) + "\n",
+        # "table": lambda rows, header: "\n" + table_to_list_md( rows, header ) + "\n",
         **custom_content_handlers   
     }
 
