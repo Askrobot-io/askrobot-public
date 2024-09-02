@@ -254,4 +254,22 @@ def scrape_pages_recursive( page_ids, indent = 0 ):
         for b in get_expandable_blocks_recursive( page ):
             sub_page_ids.append( ( get_id( b['id'] ), b['type'] ) )
 
+        if (
+            t == TYPE_DATABASE
+            and 'Data' in page
+            and page['Data'] != None
+            and 'results' in page['Data']
+            and page['Data']['results'] != None
+            and isinstance( page['Data']['results'], list )
+            and len( page['Data']['results'] ) > 0
+        ):
+            for o in page['Data']['results']:
+                if (
+                    'id' in o
+                    and o['id'] != None
+                    and 'object' in o
+                    and o['object'] != None
+                ):
+                    sub_page_ids.append( ( get_id( o['id'] ), o['object'] ) )
+
         yield from scrape_pages_recursive( sub_page_ids, indent + 1 )
